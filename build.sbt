@@ -68,5 +68,5 @@ lazy val tests = crossProject(
   .dependsOn(uriel)
   .settings(
     name := "uriel-tests",
-    libraryDependencies += "org.scalameta" %%% "munit" % "1.1.1" % Test
+    libraryDependencies += "org.scalameta" %%% "munit" % "1.1.2" % Test
   )
