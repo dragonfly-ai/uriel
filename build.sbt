@@ -26,7 +26,7 @@ lazy val uriel = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "A Color Science library for Scala, Scala.js, and Scala Native.",
     Compile / mainClass := Some("ai.dragonfly.uriel.verification.ConversionFidelity"),
     libraryDependencies ++= Seq(
-      "ai.dragonfly" %%% "mesh" % "0.15",
+      "ai.dragonfly" %%% "mesh" % "0.15.1",
       "ai.dragonfly" %%% "spatial" % "0.3.0"
     )
   )
