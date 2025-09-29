@@ -27,7 +27,7 @@ lazy val uriel = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     Compile / mainClass := Some("ai.dragonfly.uriel.verification.ConversionFidelity"),
     libraryDependencies ++= Seq(
       "ai.dragonfly" %%% "mesh" % "0.15",
-      "ai.dragonfly" %%% "spatial" % "0.3.0"
+      "ai.dragonfly" %%% "spatial" % "0.3.1"
     )
   )
   .jsSettings(
