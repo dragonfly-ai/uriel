@@ -16,7 +16,7 @@
 
 package ai.dragonfly.uriel.color.spectral
 
-import slash.vector.*
+import slash.vectorf.*
 
 
-case class Sample(λ:Double, xyz:Vec[3])
+case class Sample(λ:Float, xyz:VecF[3])

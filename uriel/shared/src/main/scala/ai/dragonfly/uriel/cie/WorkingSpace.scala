@@ -18,8 +18,8 @@ package ai.dragonfly.uriel.cie
 
 import narr.*
 import slash.*
-import vector.*
-import matrix.*
+import slash.vectorf.*
+import matrixf.*
 
 import ai.dragonfly.uriel.color.model.*
 import ai.dragonfly.uriel.color.model.perceptual.XYZ
@@ -41,9 +41,9 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
 
   lazy val whitePoint:XYZ = XYZ(illuminant.whitePointValues)
 
-  lazy val M: Mat[3,3] = primaries.getM(illuminant)
+  lazy val M: MatF[3,3] = primaries.getM(illuminant)
 
-  lazy val M_inverse: Mat[3,3] = M.inverse
+  lazy val M_inverse: MatF[3,3] = M.inv
 
   given ctx:WorkingSpace = this
 
@@ -62,7 +62,7 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
   }
 
   trait VectorColorModel[C] extends ColorModel[C] {
-    extension (c:C) def vec: Vec[3] = c.asInstanceOf[Vec[3]]
+    extension (c:C) def vec: VecF[3] = c.asInstanceOf[VecF[3]]
   }
 
   trait DiscreteColorModel[C] extends ColorModel[C]
@@ -71,8 +71,8 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
 
   trait HueSaturationModel[C] extends CylindricalColorModel[C] {
     extension (c: C) {
-      def hue: Double
-      def saturation: Double
+      def hue: Float
+      def saturation: Float
       override def toXYZ: XYZ = c.toRGB.toXYZ
     }
   }
@@ -93,7 +93,7 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
      * @param w2 the weight of the second color in the range of [0-1].
      * @return the weighted average: c1 * w1 + c2 * w2.
      */
-    def weightedAverage(c1: C, w1: Double, c2: C, w2: Double): C
+    def weightedAverage(c1: C, w1: Float, c2: C, w2: Float): C
 
     def maxDistanceSquared:Double
 
@@ -125,20 +125,20 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
      * @param w2 the weight of the second color in the range of [0-1].
      * @return the weighted average: c1 * w1 + c2 * w2.
      */
-    def weightedAverage(c1: C, w1: Double, c2: C, w2: Double): C = fromVec((toVec(c1) * w1) + (toVec(c2) * w2))
+    def weightedAverage(c1: C, w1: Float, c2: C, w2: Float): C = fromVec((toVec(c1) * w1) + (toVec(c2) * w2))
 
-    def apply(values:NArray[Double]):C
+    def apply(values:NArray[Float]):C
 
     override def euclideanDistanceSquaredTo(c1: C, c2: C): Double //= c1.euclideanDistanceSquaredTo(c2)
 
-    def fromVec(v: Vec[3]): C
-    def toVec(c: C): Vec[3]
+    def fromVec(v: VecF[3]): C
+    def toVec(c: C): VecF[3]
 
-    def fromVec2sRGB_ARGB(v: Vec[3]): ai.dragonfly.mesh.sRGB.ARGB32 = {
+    def fromVec2sRGB_ARGB(v: VecF[3]): ai.dragonfly.mesh.sRGB.ARGB32 = {
       Gamut.XYZtoARGB32(
         toXYZ(
           fromVec(v)
-        ).asInstanceOf[Vec[3]]
+        ).asInstanceOf[VecF[3]]
       ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
     }
   }
@@ -149,7 +149,7 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
 
   trait PerceptualSpace[C: PerceptualColorModel] extends VectorSpace[C] {
 
-    def apply(c1: Double, c2: Double, c3: Double): C
+    def apply(c1: Float, c2: Float, c3: Float): C
 
     override def fromRGB(rgb: RGB): C = fromXYZ(rgb.toXYZ)
 
@@ -159,7 +159,7 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
 
     override def random(r: Random = slash.Random.defaultRandom): C = fromVec(usableGamut.random(r))
 
-    override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = c1.asInstanceOf[Vec[3]].euclideanDistanceSquaredTo(c1.asInstanceOf[Vec[3]])
+    override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = c1.asInstanceOf[VecF[3]].euclideanDistanceSquaredTo(c1.asInstanceOf[VecF[3]])
   }
 
 

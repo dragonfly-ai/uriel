@@ -22,20 +22,20 @@ import ai.dragonfly.uriel.cie.WorkingSpace
 import ai.dragonfly.uriel.color.model.*
 import ai.dragonfly.mesh
 import ai.dragonfly.mesh.shape.*
-import slash.Random
-import slash.vector.*
+import slash.*
+import slash.vectorf.*
 
 trait HSL extends HueSaturation { self: WorkingSpace =>
 
   object HSL extends HueSaturationSpace[HSL] {
 
-    opaque type HSL = Vec[3]
+    opaque type HSL = VecF[3]
 
-    override lazy val usableGamut: Gamut = new Gamut(Cylinder(sideSegments = 64))
+    override lazy val usableGamut: Gamut = new Gamut( Cylinder(sideSegments = 64).toMeshF )
 
-    def apply(values: NArray[Double]): HSL = dimensionCheck(values, 3).asInstanceOf[HSL]
+    def apply(values: NArray[Float]): HSL = dimensionCheck(values, 3).asInstanceOf[HSL]
 
-    def clamp(values: NArray[Double]): HSL = {
+    def clamp(values: NArray[Float]): HSL = {
       dimensionCheck(values, 3)
       clamp(values(0), values(1), values(2))
     }
@@ -43,7 +43,7 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
     /**
      * HSL is the primary type for representing colors in HSL space.
      *
-     * @constructor Create a new HSV object from three Double values.  This constructor does not validate input parameters.
+     * @constructor Create a new HSV object from three Float values.  This constructor does not validate input parameters.
      *              For values taken from user input, sensors, or otherwise uncertain sources, consider using the factory method in the Color companion object.
      * @see [[ai.dragonfly.color.ColorVector.hsl]] for a method of constructing HSL objects that validates inputs.
      * @see [[https://en.wikipedia.org/wiki/HSL_and_HSV]] for more information about the HSL color space.
@@ -56,11 +56,11 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
      * c.toString()  // returns "HSL(211.000,75.000,33.333)"
      * }}}
      */
-    def apply(hue: Double, saturation: Double, lightness: Double): HSL = {
-      NArray[Double](hue, saturation, lightness).asInstanceOf[HSL]
+    def apply(hue: Float, saturation: Float, lightness: Float): HSL = {
+      NArray[Float](hue, saturation, lightness).asInstanceOf[HSL]
     }
 
-    def clamp(hue: Double, saturation: Double, lightness: Double): HSL = NArray[Double](
+    def clamp(hue: Float, saturation: Float, lightness: Float): HSL = NArray[Float](
       clampHue(hue),
       clamp0to1(saturation),
       clamp0to1(lightness)
@@ -75,55 +75,55 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
      * @param lightness  a percentage ranging from [0-100].
      * @return an instance of the HSL case class.
      */
-    def getIfValid(hue: Double, saturation: Double, lightness: Double): Option[HSL] = {
+    def getIfValid(hue: Float, saturation: Float, lightness: Float): Option[HSL] = {
       if (validHue(hue) && valid0to1(saturation) && valid0to1(lightness)) Some(apply(hue, saturation, lightness))
       else None
     }
 
-    //inline def toHSL(red: Double, green: Double, blue: Double): HSL =
+    //inline def toHSL(red: Float, green: Float, blue: Float): HSL =
 
     override def random(r: scala.util.Random = Random.defaultRandom): HSL = apply(
-      NArray[Double](
-        r.nextDouble() * 360.0,
-        r.nextDouble(),
-        r.nextDouble()
+      NArray[Float](
+        r.nextFloat() * 360f,
+        r.nextFloat(),
+        r.nextFloat()
       )
     )
 
-    override def toVec(hsl: HSL): Vec[3] = Vec[3](
-      hsl(1) * Math.cos(slash.degreesToRadians(hsl(0))),
-      hsl(1) * Math.sin(slash.degreesToRadians(hsl(0))),
+    override def toVec(hsl: HSL): VecF[3] = VecF[3](
+      (hsl(1) * Math.cos(slash.degreesToRadians(hsl(0)))).toFloat,
+      (hsl(1) * Math.sin(slash.degreesToRadians(hsl(0)))).toFloat,
       hsl(2)
     )
 
-    def hue(hsl: HSL): Double = hsl(0)
+    def hue(hsl: HSL): Float = hsl(0)
 
-    def saturation(hsl: HSL): Double = hsl(1)
+    def saturation(hsl: HSL): Float = hsl(1)
 
-    def lightness(hsl: HSL): Double = hsl(2)
+    def lightness(hsl: HSL): Float = hsl(2)
 
     def fromRGB(rgb: RGB): HSL = {
-      val values: NArray[Double] = hueMinMax(rgb.red, rgb.green, rgb.blue)
+      val values: NArray[Float] = hueMinMax(rgb.red, rgb.green, rgb.blue)
 
-      val delta: Double = values(2 /*MAX*/) - values(1 /*min*/)
-      val L: Double = values(1 /*min*/) + values(2 /*MAX*/)
+      val delta: Float = values(2 /*MAX*/) - values(1 /*min*/)
+      val L: Float = values(1 /*min*/) + values(2 /*MAX*/)
 
       HSL.apply(
         values(0),
-        if (delta == 0.0) 0.0 else delta / (1.0 - Math.abs(L - 1.0)),
-        0.5 * L, // (min + max) / 2
+        if (delta == 0.0) 0f else delta / (1f - Math.abs(L - 1f)),
+        0.5f * L, // (min + max) / 2
       )
     }
 
     override def toRGB(hsl: HSL): RGB = {
       // https://www.rapidtables.com/convert/color/hsl-to-rgb.html
-      val C = (1.0 - Math.abs((2 * hsl.lightness) - 1.0)) * hsl.saturation
+      val C: Float = (1f - Math.abs((2f * hsl.lightness) - 1f)) * hsl.saturation
       RGB.apply(
         HSL.hcxmToRGBvalues(
           hsl.hue,
           C,
           HSL.XfromHueC(hsl.hue, C), // X
-          hsl.lightness - (0.5 * C) // m
+          hsl.lightness - (0.5f * C) // m
         )
       )
     }
@@ -137,15 +137,15 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
 
   given CylindricalColorModel[HSL] with {
     extension (hsl: HSL) {
-      def hue: Double = HSL.hue(hsl)
+      def hue: Float = HSL.hue(hsl)
 
-      def saturation: Double = HSL.saturation(hsl)
+      def saturation: Float = HSL.saturation(hsl)
 
-      def lightness: Double = HSL.lightness(hsl)
+      def lightness: Float = HSL.lightness(hsl)
 
       override def similarity(that: HSL): Double = HSL.similarity(hsl, that)
 
-      override def copy: HSL = NArray[Double](hue, saturation, lightness).asInstanceOf[HSL]
+      override def copy: HSL = NArray[Float](hue, saturation, lightness).asInstanceOf[HSL]
 
       def toRGB: RGB = HSL.toRGB(hsl)
 

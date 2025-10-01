@@ -22,20 +22,20 @@ import ai.dragonfly.uriel.cie.WorkingSpace
 import ai.dragonfly.uriel.color.model.*
 import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
-import slash.Random
-import slash.vector.*
+import slash.*
+import slash.vectorf.*
 
 trait HSV extends HueSaturation { self: WorkingSpace =>
 
   object HSV extends HueSaturationSpace[HSV] {
 
-    opaque type HSV = Vec[3]
+    opaque type HSV = VecF[3]
 
-    override lazy val usableGamut: Gamut = new Gamut(Cylinder(capSegments = 6))
+    override lazy val usableGamut: Gamut = new Gamut( Cylinder(capSegments = 6).toMeshF )
 
-    def apply(values: NArray[Double]): HSV = dimensionCheck(values, 3).asInstanceOf[HSV]
+    def apply(values: NArray[Float]): HSV = dimensionCheck(values, 3).asInstanceOf[HSV]
 
-    def clamp(values: NArray[Double]): HSV = {
+    def clamp(values: NArray[Float]): HSV = {
       dimensionCheck(values.length, 3)
       clamp(values(0), values(1), values(2))
     }
@@ -43,7 +43,7 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
     /**
      * HSV is the primary type for representing colors in HSV space.
      *
-     * @constructor Create a new HSV object from three Double values.  This constructor does not validate
+     * @constructor Create a new HSV object from three Float values.  This constructor does not validate
      *              input parameters.  For values taken from user input, sensors, or otherwise uncertain sources, consider using
      *              the factory method in the Color companion object.
      * @see [[ai.dragonfly.color.HSV.getIfValid]] for a method of constructing HSV objects that validates inputs.
@@ -58,11 +58,11 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
      * }}}
      */
 
-    def apply(hue: Double, saturation: Double, value: Double): HSV = {
-      NArray[Double](hue, saturation, value).asInstanceOf[HSV]
+    def apply(hue: Float, saturation: Float, value: Float): HSV = {
+      NArray[Float](hue, saturation, value).asInstanceOf[HSV]
     }
 
-    def clamp(hue: Double, saturation: Double, value: Double): HSV = NArray[Double](
+    def clamp(hue: Float, saturation: Float, value: Float): HSV = NArray[Float](
       clampHue(hue),
       clamp0to1(saturation),
       clamp0to1(value)
@@ -77,21 +77,21 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
      * @param value      a percentage ranging from [0-100].
      * @return an instance of the HSV case class.
      */
-    def getIfValid(hue: Double, saturation: Double, value: Double): Option[HSV] = {
+    def getIfValid(hue: Float, saturation: Float, value: Float): Option[HSV] = {
       if (validHue(hue) && valid0to1(saturation) && valid0to1(saturation)) Some(apply(hue, saturation, value))
       else None
     }
 
     override def random(r: scala.util.Random = Random.defaultRandom): HSV = apply(
-      NArray[Double](
-        r.nextDouble() * 360.0,
-        r.nextDouble(),
-        r.nextDouble()
+      NArray[Float](
+        r.nextFloat() * 360f,
+        r.nextFloat(),
+        r.nextFloat()
       )
     )
 
     def fromRGB(rgb: RGB): HSV = {
-      val values: NArray[Double] = hueMinMax(rgb.red, rgb.green, rgb.blue)
+      val values: NArray[Float] = hueMinMax(rgb.red, rgb.green, rgb.blue)
       values(1) = { // S
         if (values(2 /*MAX*/) == 0.0) 0.0
         else (values(2 /*MAX*/) - values(1 /*min*/)) / values(2 /*MAX*/)
@@ -107,17 +107,17 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
 
     override def toXYZ(c: HSV): XYZ = c.toXYZ
 
-    override def toVec(hsv: HSV): Vec[3] = Vec[3](
-      hsv(1) * Math.cos(slash.degreesToRadians(hsv(0))),
-      hsv(1) * Math.sin(slash.degreesToRadians(hsv(0))),
+    override def toVec(hsv: HSV): VecF[3] = VecF[3](
+      (hsv(1) * Math.cos(slash.degreesToRadians(hsv(0)))).toFloat,
+      (hsv(1) * Math.sin(slash.degreesToRadians(hsv(0)))).toFloat,
       hsv(2)
     )
 
-    def hue(hsv: HSV): Double = hsv(0)
+    def hue(hsv: HSV): Float = hsv(0)
 
-    def saturation(hsv: HSV): Double = hsv(1)
+    def saturation(hsv: HSV): Float = hsv(1)
 
-    def value(hsv: HSV): Double = hsv(2)
+    def value(hsv: HSV): Float = hsv(2)
 
     override def toString:String = "HSV"
   }
@@ -127,18 +127,18 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
   given CylindricalColorModel[HSV] with {
     extension (hsv: HSV) {
 
-      //case class HSV private(override val values: NArray[Double]) extends HueSaturation[HSV] {
+      //case class HSV private(override val values: NArray[Float]) extends HueSaturation[HSV] {
 
-      def hue: Double = HSV.hue(hsv)
+      def hue: Float = HSV.hue(hsv)
 
-      def saturation: Double = HSV.saturation(hsv)
+      def saturation: Float = HSV.saturation(hsv)
 
-      def value: Double = HSV.value(hsv)
+      def value: Float = HSV.value(hsv)
 
       // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
       def toRGB: RGB = HSV.toRGB(hsv)
 
-      override def copy: HSV = NArray[Double](hue, saturation, value).asInstanceOf[HSV]
+      override def copy: HSV = NArray[Float](hue, saturation, value).asInstanceOf[HSV]
 
       override def similarity(that: HSV): Double = HSV.similarity(hsv, that)
 

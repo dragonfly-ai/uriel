@@ -18,8 +18,9 @@ package ai.dragonfly.uriel.color.model.perceptual
 
 import narr.*
 import ai.dragonfly.uriel.cie.WorkingSpace
-import slash.vector.*
-import slash.matrix.*
+import slash.*
+import slash.vectorf.*
+import slash.matrixf.*
 
 import scala.language.implicitConversions
 
@@ -39,24 +40,24 @@ trait XYZ { self:WorkingSpace =>
 
   object XYZ extends PerceptualSpace[XYZ] {
 
-    opaque type XYZ = Vec[3]
+    opaque type XYZ = VecF[3]
 
     override lazy val fullGamut: Gamut = Gamut.fromSpectralSamples(cmf, illuminant)
 
     override lazy val usableGamut: Gamut = Gamut.fromRGB(transform = (xyz:XYZ) => xyz)
 
-    def apply(values: NArray[Double]): XYZ = dimensionCheck(values, 3).asInstanceOf[XYZ]
+    def apply(values: NArray[Float]): XYZ = dimensionCheck(values, 3).asInstanceOf[XYZ]
 
-    def apply(x: Double, y: Double, z: Double): XYZ = Vec[3](x, y, z)
+    def apply(x: Float, y: Float, z: Float): XYZ = VecF[3](x, y, z)
 
-    def x(xyz: XYZ): Double = xyz(0)
+    def x(xyz: XYZ): Float = xyz(0)
 
-    def y(xyz: XYZ): Double = xyz(1)
+    def y(xyz: XYZ): Float = xyz(1)
 
-    def z(xyz: XYZ): Double = xyz(2)
+    def z(xyz: XYZ): Float = xyz(2)
 
     override def toRGB(xyz: XYZ): RGB = {
-      val temp: NArray[Double] = (M_inverse * xyz.asColumnMatrix).values
+      val temp: NArray[Float] = (M_inverse * xyz.asColumnMatrix).values
       var i: Int = 0
       while (i < temp.length) {
         temp(i) = transferFunction.encode(temp(i))
@@ -69,13 +70,13 @@ trait XYZ { self:WorkingSpace =>
     override def fromXYZ(xyz: XYZ): XYZ = copy(xyz)
 
     def copy(xyz:XYZ):XYZ = {
-      val v: Vec[3] = xyz
+      val v: VecF[3] = xyz
       v.copy
     }
 
-    override def fromVec(v: Vec[3]): XYZ = v.copy
+    override def fromVec(v: VecF[3]): XYZ = v.copy
 
-    override def toVec(xyz: XYZ): Vec[3] = copy(xyz)
+    override def toVec(xyz: XYZ): VecF[3] = copy(xyz)
 
     override def toString:String = "XYZ"
   }
@@ -86,17 +87,17 @@ trait XYZ { self:WorkingSpace =>
     extension (xyz: XYZ) {
       override inline def copy: XYZ = XYZ.copy(xyz)
 
-      def x: Double = XYZ.x(xyz)
+      def x: Float = XYZ.x(xyz)
 
-      def y: Double = XYZ.y(xyz)
+      def y: Float = XYZ.y(xyz)
 
-      def z: Double = XYZ.z(xyz)
+      def z: Float = XYZ.z(xyz)
 
       override def similarity(that: XYZ): Double = XYZ.similarity(xyz, that)
 
       override def toXYZ: XYZ = XYZ(x, y, z)
 
-      override def vec:Vec[3] = XYZ.asInstanceOf[Vec[3]].copy
+      override def vec:VecF[3] = XYZ.asInstanceOf[VecF[3]].copy
 
       override def toRGB: RGB = XYZ.toRGB(xyz)
 

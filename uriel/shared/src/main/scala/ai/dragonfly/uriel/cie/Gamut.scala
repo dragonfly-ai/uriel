@@ -22,7 +22,8 @@ import slash.matrix.ml.unsupervised.dimreduction.PCA
 import slash.matrix.ml.data.*
 import slash.stats.probability.distributions.Sampleable
 import slash.stats.probability.distributions.stream.StreamingVectorStats
-import slash.vector.*
+import slash.*
+import slash.vectorf.*
 import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
 import ai.dragonfly.uriel.ColorContext
@@ -33,37 +34,38 @@ import scala.collection.mutable
 trait Gamut { self: WorkingSpace =>
   object Gamut {
 
-    val XYZtoARGB32: Vec[3] => ColorContext.sRGB.ARGB32 = {
+    val XYZtoARGB32: VecF[3] => ColorContext.sRGB.ARGB32 = {
       import ColorContext.sRGB
       if (self == sRGB.ARGB32) {
-        (v: Vec[3]) => sRGB.ARGB32.fromXYZ(sRGB.XYZ(v.asNativeArray))
+        (v: VecF[3]) => sRGB.ARGB32.fromXYZ(sRGB.XYZ(v.asNativeArray))
       } else {
         val chromaticAdapter: ChromaticAdaptation[self.type, sRGB.type] = ChromaticAdaptation[self.type, sRGB.type](self, sRGB)
-        (v: Vec[3]) => sRGB.ARGB32.fromXYZ(chromaticAdapter(self.XYZ(v.asNativeArray)))
+        (v: VecF[3]) => sRGB.ARGB32.fromXYZ(chromaticAdapter(self.XYZ(v.asNativeArray)))
       }
     }
 
-    def computeMaxDistSquared(points: NArray[Vec[3]], mean: Vec[3]): Double = {
-
+    def computeMaxDistSquared(points: NArray[VecF[3]], meanVec: slash.vector.Vec[3]): Double = {
+      import slash.vector.*
       val vs: NArray[Vec[3]] = NArray.ofSize[Vec[3]](points.length)
       var i:Int = 0; while (i < points.length) {
-        vs(i) = points(i) - mean
+        vs(i) = points(i).toVec - meanVec
         i += 1
       }
 
-      val vecSpace = VectorSpace(points.length)
+      val vecSpace = VectorFSpace(points.length)
 
       val pca = PCA(new StaticUnsupervisedData[vecSpace.N, 3](vs))
 
       val mode = pca.basisPairs.head.basisVector
 
       var min: Double = Double.MaxValue
-      var minV: Vec[3] = mean
+      var minV: Vec[3] = meanVec
       var MAX: Double = Double.MinValue
-      var vMAX: Vec[3] = mean
+      var vMAX: Vec[3] = meanVec
 
       points.foreach {
-        p =>
+        p1 =>
+          val p = p1.toVec
           val t: Double = mode dot p
           if (t < min) {
             min = t
@@ -79,17 +81,17 @@ trait Gamut { self: WorkingSpace =>
 
     }
 
-    def fromRGB(n: Int = 32, transform: XYZ => Vec[3] = (xyz: XYZ) => xyz.vec): Gamut = {
+    def fromRGB(n: Int = 32, transform: XYZ => VecF[3] = (xyz: XYZ) => xyz.vec): Gamut = {
 
-      val m1: Mesh = Cube(1.0, n)
+      val m1: MeshF = Cube(1.0, n).toMeshF
 
 //      val m2: Mesh = Mesh(
-//        NArray.tabulate[Vec[3]](m1.points.length)((i:Int) => m1.points(i) ), //* 255.0}),
+//        NArray.tabulate[VecF[3]](m1.points.length)((i:Int) => m1.points(i) ), //* 255.0}),
 //        m1.triangles
 //      )
 
-      val m3: Mesh = Mesh(
-        m1.points.map((vRGB:Vec[3]) => transform(RGB.fromVec(vRGB).toXYZ)),
+      val m3: MeshF = MeshF(
+        m1.points.map((vRGB:VecF[3]) => transform(RGB.fromVec(vRGB).toXYZ)),
         m1.triangles
       )
 
@@ -108,7 +110,7 @@ trait Gamut { self: WorkingSpace =>
 
     def fromSpectralSamples(spectralSamples: SampleSet, illuminant: Illuminant): Gamut = fromSpectralSamples(
       spectralSamples,
-      (v: Vec[3]) => Vec[3](
+      (v: VecF[3]) => VecF[3](
         v.x * illuminant.xₙ,
         v.y * illuminant.yₙ,
         v.z * illuminant.zₙ,
@@ -116,18 +118,18 @@ trait Gamut { self: WorkingSpace =>
     )
 
 
-    def fromSpectralSamples(spectralSamples: SampleSet, transform: Vec[3] => Vec[3] = (v: Vec[3]) => v): Gamut = {
+    def fromSpectralSamples(spectralSamples: SampleSet, transform: VecF[3] => VecF[3] = (v: VecF[3]) => v): Gamut = {
 
-      val points: NArray[Vec[3]] = NArray.tabulate[Vec[3]](spectralSamples.volumePoints.length)(
+      val points: NArray[VecF[3]] = NArray.tabulate[VecF[3]](spectralSamples.volumePoints.length)(
         (i:Int)=> transform(spectralSamples.volumePoints(i))
       )
 
-      val triangles:mutable.HashSet[Triangle] = mutable.HashSet[Triangle]()
+      val triangles:mutable.HashSet[TriangleF] = mutable.HashSet[TriangleF]()
 
       var t:Int = 0
       def addTriangle(pi0:Int, pi1:Int, pi2:Int): Unit = {
-        if (Triangle.nonZeroArea(points(pi0), points(pi1), points(pi2))) {
-          triangles += Triangle(pi2, pi1, pi0)
+        if (TriangleF.nonZeroArea(points(pi0), points(pi1), points(pi2))) {
+          triangles += TriangleF(pi2, pi1, pi0)
         }
         t += 1
       }
@@ -156,7 +158,7 @@ trait Gamut { self: WorkingSpace =>
       // white adjacent:
       for (i <- (points.length - 1) - spectralSamples.sampleCount until points.length - 2) addTriangle(i, i + 1, points.length - 1)
 
-      new Gamut(Mesh.fromPointsAndHashSet(points, triangles, "Spectral Samples Gamut"))
+      new Gamut(MeshF.fromPointsAndHashSet(points, triangles, "Spectral Samples Gamut"))
     }
 
 //    println("defined Gamut object methods")
@@ -169,23 +171,23 @@ trait Gamut { self: WorkingSpace =>
    * @param cumulative
    */
 
-  case class Gamut (volumeMesh:Mesh) extends Sampleable[Vec[3]] {
+  case class Gamut (volumeMesh:MeshF) extends Sampleable[VecF[3]] {
 
-    val mean: Vec[3] = {
+    val mean: slash.vector.Vec[3] = {
       val sv2:StreamingVectorStats[3] = new StreamingVectorStats[3]()
-      volumeMesh.points.foreach((p:Vec[3]) => sv2(p))
+      volumeMesh.points.foreach((p:VecF[3]) => sv2(p.toVec))
       sv2.average()
     }
 
     val maxDistSquared: Double = Gamut.computeMaxDistSquared(volumeMesh.points, mean)
 
     val tetrahedra: NArray[Tetrahedron] = NArray.tabulate[Tetrahedron](volumeMesh.triangles.length)((i:Int) => {
-      val t: Triangle = volumeMesh.triangles(i)
+      val t: TriangleF = volumeMesh.triangles(i)
       Tetrahedron(
         mean,
-        volumeMesh.points(t.v1),
-        volumeMesh.points(t.v2),
-        volumeMesh.points(t.v3)
+        volumeMesh.points(t.v1).toVec,
+        volumeMesh.points(t.v2).toVec,
+        volumeMesh.points(t.v3).toVec
       )
     })
 
@@ -214,11 +216,11 @@ trait Gamut { self: WorkingSpace =>
       right
     }
 
-    override def random(r: scala.util.Random = slash.Random.defaultRandom): Vec[3] = {
+    override def random(r: scala.util.Random = slash.Random.defaultRandom): VecF[3] = {
       val x = r.nextDouble()
       val i = getNearestIndex(x)
       if (i < 0 || i > tetrahedra.length) println(s"x = $x, i = $i, cumulative.length = ${cumulative.length}")
-      tetrahedra(i).random(r)
+      VecF.fromVec[3](tetrahedra(i).random(r))
     }
 
   }

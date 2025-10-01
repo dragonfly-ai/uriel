@@ -1,22 +1,22 @@
 /*
  * Copyright 2023 dragonfly.ai
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache Licensef, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in writingf, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KINDf, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
 package ai.dragonfly.uriel.color.spectral
 
-import slash.vector.*
+import slash.vectorf.*
 import narr.*
 /**
  * CIE 1931 CMF data revised by Judd in 1951
@@ -26,47 +26,47 @@ import narr.*
 
 object CIE1931_JUDD1951_2deg_10nm extends SampleSet {
   override val samples:NArray[Sample] = NArray[Sample](
-    Sample(370, Vec[3](0.0008, 0.0001, 0.0046)),
-      Sample(380, Vec[3](0.0045, 0.0004, 0.0224)),
-      Sample(390, Vec[3](0.0201, 0.0015, 0.0925)),
-      Sample(400, Vec[3](0.0611, 0.0045, 0.2799)),
-      Sample(410, Vec[3](0.1267, 0.0093, 0.5835)),
-      Sample(420, Vec[3](0.2285, 0.0175, 1.0622)),
-      Sample(430, Vec[3](0.3081, 0.0273, 1.4526)),
-      Sample(440, Vec[3](0.3312, 0.0379, 1.6064)),
-      Sample(450, Vec[3](0.2888, 0.0468, 1.4717)),
-      Sample(460, Vec[3](0.2323, 0.06, 1.288)),
-      Sample(470, Vec[3](0.1745, 0.091, 1.1133)),
-      Sample(480, Vec[3](0.092, 0.139, 0.7552)),
-      Sample(490, Vec[3](0.0318, 0.208, 0.4461)),
-      Sample(500, Vec[3](0.0048, 0.323, 0.2644)),
-      Sample(510, Vec[3](0.0093, 0.503, 0.1541)),
-      Sample(520, Vec[3](0.0636, 0.71, 0.0763)),
-      Sample(530, Vec[3](0.1668, 0.862, 0.0412)),
-      Sample(540, Vec[3](0.2926, 0.954, 0.02)),
-      Sample(550, Vec[3](0.4364, 0.995, 0.0088)),
-      Sample(560, Vec[3](0.597, 0.995, 0.0039)),
-      Sample(570, Vec[3](0.7642, 0.952, 0.002)),
-      Sample(580, Vec[3](0.9159, 0.87, 0.0016)),
-      Sample(590, Vec[3](1.0225, 0.757, 0.0011)),
-      Sample(600, Vec[3](1.0544, 0.631, 0.0007)),
-      Sample(610, Vec[3](0.9922, 0.503, 0.0003)),
-      Sample(620, Vec[3](0.8432, 0.381, 0.0002)),
-      Sample(630, Vec[3](0.6327, 0.265, 0.0001)),
-      Sample(640, Vec[3](0.4404, 0.175, 0)),
-      Sample(650, Vec[3](0.2787, 0.107, 0)),
-      Sample(660, Vec[3](0.1619, 0.061, 0)),
-      Sample(670, Vec[3](0.0858, 0.032, 0)),
-      Sample(680, Vec[3](0.0459, 0.017, 0)),
-      Sample(690, Vec[3](0.0222, 0.0082, 0)),
-      Sample(700, Vec[3](0.0113, 0.0041, 0)),
-      Sample(710, Vec[3](0.0057, 0.0021, 0)),
-      Sample(720, Vec[3](0.0028, 0.0011, 0)),
-      Sample(730, Vec[3](0.0015, 0.0005, 0)),
-      Sample(740, Vec[3](0.0005, 0.0002, 0)),
-      Sample(750, Vec[3](0.0003, 0.0001, 0)),
-      Sample(760, Vec[3](0.0002, 0.0001, 0)),
-      Sample(770, Vec[3](0.0001, 0, 0))
+    Sample(370f, VecF[3]( 0.0008f, 0.0001f, 0.0046f )),
+      Sample(380f, VecF[3]( 0.0045f, 0.0004f, 0.0224f )),
+      Sample(390f, VecF[3]( 0.0201f, 0.0015f, 0.0925f )),
+      Sample(400f, VecF[3]( 0.0611f, 0.0045f, 0.2799f )),
+      Sample(410f, VecF[3]( 0.1267f, 0.0093f, 0.5835f )),
+      Sample(420f, VecF[3]( 0.2285f, 0.0175f, 1.0622f )),
+      Sample(430f, VecF[3]( 0.3081f, 0.0273f, 1.4526f )),
+      Sample(440f, VecF[3]( 0.3312f, 0.0379f, 1.6064f )),
+      Sample(450f, VecF[3]( 0.2888f, 0.0468f, 1.4717f )),
+      Sample(460f, VecF[3]( 0.2323f, 0.06f, 1.288f )),
+      Sample(470f, VecF[3]( 0.1745f, 0.091f, 1.1133f )),
+      Sample(480f, VecF[3]( 0.092f, 0.139f, 0.7552f )),
+      Sample(490f, VecF[3]( 0.0318f, 0.208f, 0.4461f )),
+      Sample(500f, VecF[3]( 0.0048f, 0.323f, 0.2644f )),
+      Sample(510f, VecF[3]( 0.0093f, 0.503f, 0.1541f )),
+      Sample(520f, VecF[3]( 0.0636f, 0.71f, 0.0763f )),
+      Sample(530f, VecF[3]( 0.1668f, 0.862f, 0.0412f )),
+      Sample(540f, VecF[3]( 0.2926f, 0.954f, 0.02f )),
+      Sample(550f, VecF[3]( 0.4364f, 0.995f, 0.0088f )),
+      Sample(560f, VecF[3]( 0.597f, 0.995f, 0.0039f )),
+      Sample(570f, VecF[3]( 0.7642f, 0.952f, 0.002f )),
+      Sample(580f, VecF[3]( 0.9159f, 0.87f, 0.0016f )),
+      Sample(590f, VecF[3]( 1.0225f, 0.757f, 0.0011f )),
+      Sample(600f, VecF[3]( 1.0544f, 0.631f, 0.0007f )),
+      Sample(610f, VecF[3]( 0.9922f, 0.503f, 0.0003f )),
+      Sample(620f, VecF[3]( 0.8432f, 0.381f, 0.0002f )),
+      Sample(630f, VecF[3]( 0.6327f, 0.265f, 0.0001f )),
+      Sample(640f, VecF[3]( 0.4404f, 0.175f, 0f )),
+      Sample(650f, VecF[3]( 0.2787f, 0.107f, 0f )),
+      Sample(660f, VecF[3]( 0.1619f, 0.061f, 0f )),
+      Sample(670f, VecF[3]( 0.0858f, 0.032f, 0f )),
+      Sample(680f, VecF[3]( 0.0459f, 0.017f, 0f )),
+      Sample(690f, VecF[3]( 0.0222f, 0.0082f, 0f )),
+      Sample(700f, VecF[3]( 0.0113f, 0.0041f, 0f )),
+      Sample(710f, VecF[3]( 0.0057f, 0.0021f, 0f )),
+      Sample(720f, VecF[3]( 0.0028f, 0.0011f, 0f )),
+      Sample(730f, VecF[3]( 0.0015f, 0.0005f, 0f )),
+      Sample(740f, VecF[3]( 0.0005f, 0.0002f, 0f )),
+      Sample(750f, VecF[3]( 0.0003f, 0.0001f, 0f )),
+      Sample(760f, VecF[3]( 0.0002f, 0.0001f, 0f )),
+      Sample(770f, VecF[3]( 0.0001f, 0f, 0f))
   )
 
 }

@@ -19,23 +19,23 @@ package ai.dragonfly.uriel.color.model.perceptual
 import narr.*
 import ai.dragonfly.uriel.cie.*
 import ai.dragonfly.uriel.cie.Constant.*
-import slash.vector.*
-import slash.cubeInPlace
+import slash.*
+import slash.vectorf.*
 
 trait Lab { self: WorkingSpace =>
 
   object Lab extends PerceptualSpace[Lab] {
 
-    opaque type Lab = Vec[3]
+    opaque type Lab = VecF[3]
 
     override lazy val fullGamut: Gamut = Gamut.fromSpectralSamples(
       cmf,
-      (v: Vec[3]) => toVec(fromXYZ(XYZ(whitePoint.x * v.x, whitePoint.y * v.y, whitePoint.z * v.z)))
+      (v: VecF[3]) => toVec(fromXYZ(XYZ(whitePoint.x * v.x, whitePoint.y * v.y, whitePoint.z * v.z)))
     )
 
     override lazy val usableGamut: Gamut = Gamut.fromRGB( 32, (xyz: XYZ) => toVec(fromXYZ(xyz)) )
 
-    def apply(values: NArray[Double]): Lab = dimensionCheck(values, 3).asInstanceOf[Lab]
+    def apply(values: NArray[Float]): Lab = dimensionCheck(values, 3).asInstanceOf[Lab]
 
     /**
      * @param L the L* component of the CIE L*a*b* color.
@@ -44,21 +44,21 @@ trait Lab { self: WorkingSpace =>
      * @return an instance of the LAB case class.
      * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
      */
-    def apply(L: Double, a: Double, b: Double): Lab = apply(NArray[Double](a, b, L))
+    def apply(L: Float, a: Float, b: Float): Lab = apply(NArray[Float](a, b, L))
 
     inline def f(t: Double): Double = if (t > ϵ) Math.cbrt(t) else (t * `k/116`) + `16/116`
 
     inline def fInverse(t: Double): Double = if (t > `∛ϵ`) cubeInPlace(t) else (`116/k` * t) - `16/k`
 
-    def L(lab: Lab): Double = lab(2)
+    def L(lab: Lab): Float = lab(2)
 
-    def a(lab: Lab): Double = lab(0)
+    def a(lab: Lab): Float = lab(0)
 
-    def b(lab: Lab): Double = lab(1)
+    def b(lab: Lab): Float = lab(1)
 
-    override def fromVec(v: Vec[3]): Lab = v
+    override def fromVec(v: VecF[3]): Lab = v
 
-    override def toVec(lab: Lab): Vec[3] = lab.asInstanceOf[Vec[3]].copy
+    override def toVec(lab: Lab): VecF[3] = lab.asInstanceOf[VecF[3]].copy
 
     override def toRGB(lab: Lab): RGB = lab.toXYZ.toRGB
 
@@ -67,12 +67,12 @@ trait Lab { self: WorkingSpace =>
       val fy: Double = `1/116` * (lab.L + 16.0)
 
       XYZ(
-        fInverse((0.002 * lab.a) + fy) * illuminant.xₙ, // X
+        (fInverse((0.002 * lab.a) + fy) * illuminant.xₙ).toFloat, // X
         (if (lab.L > kϵ) {
-          val l = lab.L + 16.0;
-          `1/116³` * (l * l * l)
-        } else `1/k` * lab.L) * illuminant.yₙ, // Y
-        fInverse(fy - (0.005 * lab.b)) * illuminant.zₙ, // Z
+          val l = lab.L + 16.0
+          `1/116³` * (l * l * l) * illuminant.yₙ
+        } else `1/k` * lab.L * illuminant.yₙ).toFloat, // Y
+        (fInverse(fy - (0.005 * lab.b)) * illuminant.zₙ).toFloat, // Z
       )
     }
 
@@ -87,9 +87,9 @@ trait Lab { self: WorkingSpace =>
       val fy: Double = f(illuminant.`1/yₙ` * xyz.y)
 
       apply(
-        116.0 * fy - 16.0,
-        500.0 * (f(illuminant.`1/xₙ` * xyz.x) - fy),
-        200.0 * (fy - f(illuminant.`1/zₙ` * xyz.z))
+        (116.0 * fy - 16.0).toFloat,
+        (500.0 * (f(illuminant.`1/xₙ` * xyz.x) - fy)).toFloat,
+        (200.0 * (fy - f(illuminant.`1/zₙ` * xyz.z))).toFloat
       )
     }
 
@@ -103,11 +103,11 @@ trait Lab { self: WorkingSpace =>
 
       override inline def copy: Lab = Lab(a, b, L)
 
-      def L: Double = Lab.L(lab)
+      def L: Float = Lab.L(lab)
 
-      def a: Double = Lab.a(lab)
+      def a: Float = Lab.a(lab)
 
-      def b: Double = Lab.b(lab)
+      def b: Float = Lab.b(lab)
 
       def toXYZ: XYZ = Lab.toXYZ(lab)
 

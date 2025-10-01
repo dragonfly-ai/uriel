@@ -27,7 +27,7 @@ object LuvStats extends App {
 
   var i = 0
   while (i < pts.length) {
-    stats(pts(i))
+    stats(pts(i).toVec)
     i = i + 1
   }
 

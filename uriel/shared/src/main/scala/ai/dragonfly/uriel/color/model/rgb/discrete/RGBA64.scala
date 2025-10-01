@@ -104,13 +104,13 @@ trait RGBA64 extends DiscreteRGB { self: WorkingSpace =>
       else None
     }
 
-    inline def clamp(red: Double, green: Double, blue: Double): Long = clamp(red, green, blue, MAX)
+    inline def clamp(red: Float, green: Float, blue: Float): Long = clamp(red, green, blue, MAX.toFloat)
 
     override def fromXYZ(xyz: XYZ): RGBA64 = fromRGB(xyz.toRGB)
 
     def fromRGB(rgb: RGB): RGBA64 = clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX)
 
-    override def weightedAverage(c1: RGBA64, w1: Double, c2: RGBA64, w2: Double): RGBA64 = RGBA64(
+    override def weightedAverage(c1: RGBA64, w1: Float, c2: RGBA64, w2: Float): RGBA64 = RGBA64(
       ((c1.red * w1) + (c2.red * w2)).toInt,
       ((c1.green * w1) + (c2.green * w2)).toInt,
       ((c1.blue * w1) + (c2.blue * w2)).toInt,
@@ -179,7 +179,11 @@ trait RGBA64 extends DiscreteRGB { self: WorkingSpace =>
 
       override def toRGB: RGB = {
         import RGBA64.MAXD
-        RGB(red.toDouble / MAXD, green.toDouble / MAXD, blue.toDouble / MAXD)
+        RGB(
+          (red / MAXD).toFloat,
+          (green / MAXD).toFloat,
+          (blue / MAXD).toFloat
+        )
       }
 
       override def similarity(that: RGBA64): Double = RGBA64.similarity(rgba, that)

@@ -16,17 +16,17 @@
 
 import scala.language.implicitConversions
 import narr.*
-import ai.dragonfly.spatial.PROctreeMap
+import ai.dragonfly.spatial.PROctreeFMap
 import ai.dragonfly.uriel.ColorContext
 import ColorContext.sRGB.*
-import slash.vector.Vec
+import slash.vectorf.*
 
 import scala.reflect.ClassTag
 
 class ColorOctree extends munit.FunSuite {
 
   test("ColorOctree") {
-    val octree: PROctreeMap[NArray[Int]] = new PROctreeMap[NArray[Int]]( 1.0, Vec[3](0.5, 0.5, 0.5), 64 )
+    val octree: PROctreeFMap[NArray[Int]] = new PROctreeFMap[NArray[Int]]( 1f, VecF[3](0.5f, 0.5f, 0.5f), 64 )
     val c:RGB = RGB.random()
     val ci: Int = ARGB32.fromRGB(c)
     octree.insert(c.vec, NArray.fill[Int](1)(ci))

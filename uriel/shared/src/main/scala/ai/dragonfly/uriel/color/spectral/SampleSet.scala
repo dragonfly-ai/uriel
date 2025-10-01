@@ -16,9 +16,8 @@
 
 package ai.dragonfly.uriel.color.spectral
 
-
-import slash.vector.*
 import narr.*
+import slash.vectorf.*
 
 trait SampleSet {
 
@@ -26,33 +25,39 @@ trait SampleSet {
 
   def sampleCount: Int = samples.length
 
-  lazy val volumePoints:NArray[Vec[3]] = {
+  lazy val volumePoints:NArray[VecF[3]] = {
 
-    val points: NArray[Vec[3]] = NArray.ofSize[Vec[3]](
+    val points: NArray[VecF[3]] = NArray.ofSize[VecF[3]](
       2 + (samples.length * (samples.length - 1))
     )
 
-    points(0) = Vec[3](0.0, 0.0, 0.0)
+    points(0) = VecF[3](0f, 0f, 0f)
 
-    val `xyzʷ`:Vec[3] = {
-      val v: Vec[3] = Vec[3](0.0, 0.0, 0.0)
+    val `xyzʷ`:VecF[3] = {
+      val v: VecF[3] = VecF[3](0f, 0f, 0f)
       for (s <- samples) v.add(s.xyz)
       v
     }
 
     var p: Int = 1
 
-    points(points.length - 1) = Vec[3](1.0, 1.0, 1.0)
+    points(points.length - 1) = VecF[3](1f, 1f, 1f)
 
-    for (i <- 0 until samples.length - 1) {
-      for (j <- 0 until samples.length) {
-        val v: Vec[3] = Vec[3](0.0, 0.0, 0.0)
-        for (k <- 0 to i) {
+    var i: Int = 0
+    while (i < samples.length - 1) {
+      var j: Int = 0
+      while (j < samples.length) {
+        val v: VecF[3] = VecF[3](0f, 0f, 0f)
+        var k: Int = 0
+        while (k <= i) {
           v.add(samples((j + k) % samples.length).xyz)
+          k = k + 1
         }
-        points(p) = Vec[3](v.x / `xyzʷ`.x, v.y / `xyzʷ`.y, v.z / `xyzʷ`.z)
+        points(p) = VecF[3](v.x / `xyzʷ`.x, v.y / `xyzʷ`.y, v.z / `xyzʷ`.z)
         p += 1
+        j = j + 1
       }
+      i = i + 1
     }
 
     points

@@ -109,9 +109,9 @@ trait ARGB32 extends DiscreteRGB { self: WorkingSpace =>
       else None
     }
 
-    override inline def clamp(red: Double, green: Double, blue: Double): Int = clamp(MAX, red, green, blue)
+    override inline def clamp(red: Float, green: Float, blue: Float): Int = clamp(MAX.toFloat, red, green, blue)
 
-    override def weightedAverage(c1: ARGB32, w1: Double, c2: ARGB32, w2: Double): ARGB32 = ARGB32(
+    override def weightedAverage(c1: ARGB32, w1: Float, c2: ARGB32, w2: Float): ARGB32 = ARGB32(
       ((c1.alpha * w1) + (c2.alpha * w2)).toInt,
       ((c1.red * w1) + (c2.red * w2)).toInt,
       ((c1.green * w1) + (c2.green * w2)).toInt,
@@ -125,7 +125,7 @@ trait ARGB32 extends DiscreteRGB { self: WorkingSpace =>
      * @return an ARGB instance encoding the desired grayscale intensity.
      */
     def grayIfValid(intensity: Int): Option[ARGB32] = {
-      if (valid0to1(intensity)) Some(apply(intensity, intensity, intensity))
+      if (-1 < intensity && intensity < 256) Some(apply(intensity, intensity, intensity))
       else None
     }
 
@@ -143,7 +143,7 @@ trait ARGB32 extends DiscreteRGB { self: WorkingSpace =>
     override def fromRGB(rgb: RGB): ARGB32 = apply(clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX))
     override def toRGB(argb: ARGB32): RGB = {
       import ARGB32.MAXD
-      RGB(argb.red.toDouble / MAXD, argb.green.toDouble / MAXD, argb.blue.toDouble / MAXD)
+      RGB(argb.red.toFloat / MAXD, argb.green.toFloat / MAXD, argb.blue.toFloat / MAXD)
     }
 
     override def fromXYZ(xyz: XYZ): ARGB32 = fromRGB(xyz.toRGB)

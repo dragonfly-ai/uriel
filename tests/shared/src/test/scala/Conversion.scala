@@ -17,7 +17,9 @@
 import ai.dragonfly.uriel.ColorContext
 
 class Conversion extends munit.FunSuite {
+
   test("Random Conversions") {
+
     for (ctx <- ColorContext.knownContexts) {
       import ctx.*
 

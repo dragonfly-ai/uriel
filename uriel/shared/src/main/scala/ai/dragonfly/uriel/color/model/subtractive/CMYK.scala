@@ -21,26 +21,26 @@ import ai.dragonfly.uriel.cie.WorkingSpace
 import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
 import ai.dragonfly.uriel.*
-import slash.Random
-import slash.vector.*
+import slash.*
+import slash.vectorf.*
 
 trait CMYK { self: WorkingSpace =>
 
   object CMYK extends VectorSpace[CMYK] {
 
-    opaque type CMYK = Vec[4]
+    opaque type CMYK = VecF[4]
 
-    override lazy val usableGamut: Gamut = new Gamut(Cube(1.0, 32))
+    override lazy val usableGamut: Gamut = new Gamut( Cube(1.0, 32).toMeshF )
 
     override val maxDistanceSquared: Double = 4.0
 
-    def apply(values: NArray[Double]): CMYK = {
+    def apply(values: NArray[Float]): CMYK = {
       if (values.length == 3) apply(values(0), values(1), values(2))
       else dimensionCheck(values, 4).asInstanceOf[CMYK]
     }
 
-    def apply(cyan: Double, magenta: Double, yellow: Double): CMYK = {
-      val values: NArray[Double] = NArray[Double](
+    def apply(cyan: Float, magenta: Float, yellow: Float): CMYK = {
+      val values: NArray[Float] = NArray[Float](
         cyan,
         magenta,
         yellow,
@@ -56,7 +56,7 @@ trait CMYK { self: WorkingSpace =>
       values.asInstanceOf[CMYK]
     }
 
-    def apply(cyan: Double, magenta: Double, yellow: Double, key: Double): CMYK = apply(NArray[Double](cyan, magenta, yellow, key))
+    def apply(cyan: Float, magenta: Float, yellow: Float, key: Float): CMYK = apply(NArray[Float](cyan, magenta, yellow, key))
 
     /**
      * Factory method for creating instances of the CMYK class.
@@ -68,7 +68,7 @@ trait CMYK { self: WorkingSpace =>
      * @param key   a value between [0-1]
      * @return an instance of the CMYK class.
      */
-    def getIfValid(cyan: Double, magenta: Double, yellow: Double, key: Double): Option[CMYK] = {
+    def getIfValid(cyan: Float, magenta: Float, yellow: Float, key: Float): Option[CMYK] = {
       if (valid0to1(key) && valid0to1(cyan, magenta, yellow) && valid0to1(cyan + key, magenta + key, yellow + key)) {
         Some(apply(cyan, magenta, yellow, key))
       }
@@ -76,21 +76,21 @@ trait CMYK { self: WorkingSpace =>
     }
 
     override def random(r: scala.util.Random = Random.defaultRandom): CMYK = apply(
-      r.nextDouble(),
-      r.nextDouble(),
-      r.nextDouble()
+      r.nextFloat(),
+      r.nextFloat(),
+      r.nextFloat()
     )
 
 
     override def toRGB(c: CMYK): RGB = c.toRGB
     def fromRGB(rgb: RGB): CMYK = {
       // http://color.lukas-stratmann.com/color-systems/cmy.html
-      val k:Double = 1.0 - Math.max(rgb.red, Math.max(rgb.green, rgb.blue))
+      val k:Float = (1f - Math.max(rgb.red, Math.max(rgb.green, rgb.blue))).toFloat
       apply(
         clamp0to1(
-          (1.0 - rgb.red) - k,
-          (1.0 - rgb.green) - k,
-          (1.0 - rgb.blue) - k,
+          (1f - rgb.red) - k,
+          (1f - rgb.green) - k,
+          (1f - rgb.blue) - k,
           k
         )
       )
@@ -99,17 +99,17 @@ trait CMYK { self: WorkingSpace =>
     override def fromXYZ(xyz: XYZ): CMYK = fromRGB(xyz.toRGB)
     override def toXYZ(c: CMYK): XYZ = c.toXYZ
     
-    def cyan(cmyk: CMYK): Double = cmyk(0)
+    def cyan(cmyk: CMYK): Float = cmyk(0)
 
-    def magenta(cmyk: CMYK): Double = cmyk(1)
+    def magenta(cmyk: CMYK): Float = cmyk(1)
 
-    def yellow(cmyk: CMYK): Double = cmyk(2)
+    def yellow(cmyk: CMYK): Float = cmyk(2)
 
-    def key(cmyk: CMYK): Double = cmyk(3)
+    def key(cmyk: CMYK): Float = cmyk(3)
 
-    def black(cmyk: CMYK): Double = cmyk(3)
+    def black(cmyk: CMYK): Float = cmyk(3)
 
-    override def toVec(c: CMYK): Vec[3] = Vec[3](
+    override def toVec(c: CMYK): VecF[3] = VecF[3](
       c.cyan + c.key,
       c.yellow + c.key,
       c.magenta + c.key
@@ -117,7 +117,7 @@ trait CMYK { self: WorkingSpace =>
 
     override def euclideanDistanceSquaredTo(cmyk1: CMYK, cmyk2: CMYK): Double = cmyk1.euclideanDistanceSquaredTo(cmyk2)
 
-    override def fromVec(v: Vec[3]): CMYK = apply(v.x, v.y, v.z)
+    override def fromVec(v: VecF[3]): CMYK = apply(v.x, v.y, v.z)
 
     override def toString:String = "CMYK"
   }
@@ -125,7 +125,7 @@ trait CMYK { self: WorkingSpace =>
   /**
    * CMYK is the primary type for representing colors in CMYK space.
    *
-   * @constructor Create a new CMYK object from three Double values.  This constructor does not validate input parameters.
+   * @constructor Create a new CMYK object from three Float values.  This constructor does not validate input parameters.
    *              For values taken from user input, sensors, or otherwise uncertain sources, consider using the factory method in the Color companion object.
    * @see [[ai.dragonfly.color.CMYK.getIfValid]] for a method of constructing CMYK objects that validates inputs.
    * @see [[https://en.wikipedia.org/wiki/CMYK_color_model]] for more information about the CMYK color space.
@@ -145,24 +145,24 @@ trait CMYK { self: WorkingSpace =>
   given VectorColorModel[CMYK] with {
     extension (cmyk: CMYK) {
 
-      def cyan: Double = CMYK.cyan(cmyk)
+      def cyan: Float = CMYK.cyan(cmyk)
 
-      def magenta: Double = CMYK.magenta(cmyk)
+      def magenta: Float = CMYK.magenta(cmyk)
 
-      def yellow: Double = CMYK.yellow(cmyk)
+      def yellow: Float = CMYK.yellow(cmyk)
 
-      def key: Double = CMYK.key(cmyk)
+      def key: Float = CMYK.key(cmyk)
 
-      def black: Double = CMYK.black(cmyk)
+      def black: Float = CMYK.black(cmyk)
 
       override def toXYZ: XYZ = toRGB.toXYZ
 
       override def toRGB: RGB = {
         // http://color.lukas-stratmann.com/color-systems/cmy.html
         clamp0to1(
-          1.0 - (cyan + key),
-          1.0 - (magenta + key),
-          1.0 - (yellow + key)
+          1f - (cyan + key),
+          1f - (magenta + key),
+          1f - (yellow + key)
         ).asInstanceOf[RGB]
 
         // https://www.rapidtables.com/convert/color/cmyk-to-rgb.html
@@ -178,7 +178,7 @@ trait CMYK { self: WorkingSpace =>
 
       override def render: String = s"CMYK($cyan, $magenta, $yellow, $key)"
 
-      override def copy: CMYK = NArray[Double](cyan, magenta, yellow, key).asInstanceOf[CMYK]
+      override def copy: CMYK = NArray[Float](cyan, magenta, yellow, key).asInstanceOf[CMYK]
     }
   }
 }

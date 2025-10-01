@@ -18,7 +18,7 @@ package ai.dragonfly.uriel.experiments
 
 import ai.dragonfly.uriel.ColorContext
 
-import slash.vector.*
+import slash.vectorf.*
 
 import java.awt.image.BufferedImage
 import java.io.File
@@ -44,7 +44,7 @@ object ColorSpaceNoise extends App {
       for (y <- 0 until h) {
         for (x <- 0 until w) {
           val c = space.random()
-          bi.setRGB(x, y, Gamut.XYZtoARGB32(c.toXYZ.asInstanceOf[Vec[3]]))
+          bi.setRGB(x, y, Gamut.XYZtoARGB32(c.toXYZ.asInstanceOf[VecF[3]]))
         }
       }
 

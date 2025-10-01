@@ -19,11 +19,7 @@ package ai.dragonfly.uriel.color.model.rgb.discrete
 import ai.dragonfly.uriel.*
 import ai.dragonfly.uriel.cie.WorkingSpace
 
-
-
-
 import slash.squareInPlace
-
 
 trait DiscreteRGB {
   self: WorkingSpace =>
@@ -41,9 +37,9 @@ trait DiscreteRGB {
   trait UtilDiscreteRGB[C:DiscreteRGB] extends DiscreteSpace[C] {
     val min: Int = 0
     val MAX: Int
-    lazy val MAXD: Double = MAX.toDouble
+    lazy val MAXD: Float = MAX.toFloat
 
-    override lazy val maxDistanceSquared: Double = 3 * squareInPlace(MAXD)
+    override lazy val maxDistanceSquared: Double = 3.0 * squareInPlace(MAXD)
 
     override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = squareInPlace(c1.red - c2.red) + squareInPlace(c1.green - c2.green) + squareInPlace(c1.blue - c2.blue)
 
@@ -80,22 +76,22 @@ trait DiscreteRGB {
   trait UtilRGB32[C: DiscreteRGB] extends UtilDiscreteRGB[C] {
     override val MAX: Int = 255
 
-    inline def clamp(intensity: Double): Int = Math.round(Math.max(0.0, Math.min(MAX, intensity))).toInt
+    inline def clamp(intensity: Float): Int = Math.round(Math.max(0f, Math.min(MAX.toFloat, intensity))).toInt
 
-    inline def clamp(c4: Double, c3: Double, c2: Double, c1: Double): Int = {
+    inline def clamp(c4: Float, c3: Float, c2: Float, c1: Float): Int = {
       (clamp(c4) << 24) | (clamp(c3) << 16) | (clamp(c2) << 8) | clamp(c1)
     }
 
-    inline def clamp(red: Double, green: Double, blue: Double): Int
+    inline def clamp(red: Float, green: Float, blue: Float): Int
   }
 
 
   trait UtilDiscreteRGB64[C: DiscreteRGB] extends UtilDiscreteRGB[C] {
     override val MAX: Int = 65535
 
-    inline def clamp(intensity: Double): Long = Math.round(Math.max(0.0, Math.min(MAX, intensity)))
+    inline def clamp(intensity: Float): Long = Math.round(Math.max(0f, Math.min(MAX.toFloat, intensity)))
 
-    inline def clamp(c4: Double, c3: Double, c2: Double, c1: Double): Long = {
+    inline def clamp(c4: Float, c3: Float, c2: Float, c1: Float): Long = {
       (clamp(c4) << 48) | (clamp(c3) << 32) | (clamp(c2) << 16) | clamp(c1)
     }
 
@@ -110,7 +106,7 @@ trait DiscreteRGB {
       else None
     }
 
-    def clamp(red: Double, green: Double, blue: Double): Long
+    def clamp(red: Float, green: Float, blue: Float): Long
   }
 
 }

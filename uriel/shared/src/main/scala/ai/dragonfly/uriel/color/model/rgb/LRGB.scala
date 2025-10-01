@@ -21,9 +21,9 @@ import ai.dragonfly.mesh.shape.*
 import ai.dragonfly.uriel.*
 import ai.dragonfly.uriel.cie.*
 import narr.*
-import slash.Random
-import slash.vector.*
-import slash.matrix.*
+import slash.*
+import slash.vectorf.*
+import slash.matrixf.*
 
 import scala.language.implicitConversions
 
@@ -31,18 +31,18 @@ trait LRGB { self: WorkingSpace =>
 
   object LRGB extends VectorSpace[LRGB] {
 
-    opaque type LRGB = Vec[3]
+    opaque type LRGB = VecF[3]
 
-    override lazy val usableGamut: Gamut = new Gamut( Cube(1.0, 32) )
+    override lazy val usableGamut: Gamut = new Gamut( Cube(1.0, 32).toMeshF )
 
-    override val maxDistanceSquared: Double = 3.0
+    override val maxDistanceSquared: Double = 3f
 
-    def apply(values: NArray[Double]): LRGB = dimensionCheck(values, 3).asInstanceOf[LRGB]
+    def apply(values: NArray[Float]): LRGB = dimensionCheck(values, 3).asInstanceOf[LRGB]
 
     /**
      * Factory method to create a fully opaque RGB instance from separate, specified red, green, blue components and
      * a default alpha value of 1.0.
-     * Double values that range outside of [0.0-1.0] may give unexpected results.  For values taken from user input, sensors,
+     * Float values that range outside of [0.0-1.0] may give unexpected results.  For values taken from user input, sensors,
      * or otherwise uncertain sources, consider using the factory method in the Color companion object.
      *
      * @see [[ai.dragonfly.color.ColorVectorSpace.RGB]] for a method of constructing RGB objects that validates inputs.
@@ -52,7 +52,7 @@ trait LRGB { self: WorkingSpace =>
      * @return an instance of the RGB case class.
      * @example {{{ val c = RGB(72,105,183) }}}
      */
-    def apply(red: Double, green: Double, blue: Double): LRGB = apply(NArray[Double](red, green, blue))
+    def apply(red: Float, green: Float, blue: Float): LRGB = apply(NArray[Float](red, green, blue))
 
     /**
      * Factory method to create a fully Opaque RGB color; one with an alpha value of 1.0.
@@ -68,7 +68,7 @@ trait LRGB { self: WorkingSpace =>
      * @return an instance of the RGB class or None if fed invalid input.
      */
 
-    def getIfValid(red: Double, green: Double, blue: Double): Option[LRGB] = {
+    def getIfValid(red: Float, green: Float, blue: Float): Option[LRGB] = {
       if (valid0to1(red, green, blue)) Some(apply(red, green, blue))
       else None
     }
@@ -82,17 +82,17 @@ trait LRGB { self: WorkingSpace =>
      *
      * @return a randomly generated color sampled from the RGB Color ColorSpace.
      */
-    override def random(r: scala.util.Random = Random.defaultRandom): LRGB = Vec[3](r.nextDouble(), r.nextDouble(), r.nextDouble())
+    override def random(r: scala.util.Random = Random.defaultRandom): LRGB = VecF[3](r.nextFloat(), r.nextFloat(), r.nextFloat())
 
-    def red(lrgb:LRGB):Double = lrgb(0)
-    def green(lrgb:LRGB):Double = lrgb(1)
-    def blue(lrgb:LRGB):Double = lrgb(2)
+    def red(lrgb:LRGB):Float = lrgb(0)
+    def green(lrgb:LRGB):Float = lrgb(1)
+    def blue(lrgb:LRGB):Float = lrgb(2)
 
     override def euclideanDistanceSquaredTo(c1: LRGB, c2: LRGB): Double = c1.euclideanDistanceSquaredTo(c2)
 
-    override def fromVec(v: Vec[3]): LRGB = v
+    override def fromVec(v: VecF[3]): LRGB = v
 
-    override def toVec(lrgb: LRGB): Vec[3] = lrgb.asInstanceOf[Vec[3]].copy
+    override def toVec(lrgb: LRGB): VecF[3] = lrgb.asInstanceOf[VecF[3]].copy
 
     override def toRGB(lrgb: LRGB): RGB = RGB(
       transferFunction.encode(lrgb.red),
@@ -105,7 +105,7 @@ trait LRGB { self: WorkingSpace =>
       transferFunction.decode(rgb.blue)
     )
 
-    override def toXYZ(lrgb: LRGB): XYZ = (M * Mat[3, 1]( lrgb.red, lrgb.green, lrgb.blue )).values.asInstanceOf[XYZ]
+    override def toXYZ(lrgb: LRGB): XYZ = (M * MatF[3, 1]( lrgb.red, lrgb.green, lrgb.blue )).values.asInstanceOf[XYZ]
     override def fromXYZ(xyz:XYZ):LRGB = LRGB((M_inverse * xyz.vec.asColumnMatrix).values)
 
     override def toString:String = "LRGB"
@@ -116,11 +116,11 @@ trait LRGB { self: WorkingSpace =>
   given VectorColorModel[LRGB] with {
     extension (lrgb: LRGB) {
 
-      def red: Double = LRGB.red(lrgb)
+      def red: Float = LRGB.red(lrgb)
 
-      def green: Double = LRGB.green(lrgb)
+      def green: Float = LRGB.green(lrgb)
 
-      def blue: Double = LRGB.blue(lrgb)
+      def blue: Float = LRGB.blue(lrgb)
 
       override def render: String = s"LRGB($red, $green, $blue)"
 

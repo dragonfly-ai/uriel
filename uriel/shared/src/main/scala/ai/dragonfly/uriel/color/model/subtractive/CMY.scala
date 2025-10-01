@@ -21,22 +21,22 @@ import ai.dragonfly.uriel.cie.WorkingSpace
 import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
 import ai.dragonfly.uriel.*
-import slash.Random
-import slash.vector.*
+import slash.*
+import slash.vectorf.*
 
 trait CMY { self: WorkingSpace =>
 
   object CMY extends VectorSpace[CMY] {
 
-    opaque type CMY = Vec[3]
+    opaque type CMY = VecF[3]
 
-    override lazy val usableGamut: Gamut = new Gamut(Cube(1.0, 32))
+    override lazy val usableGamut: Gamut = new Gamut( Cube(1.0, 32).toMeshF )
 
     override val maxDistanceSquared: Double = 3.0
 
-    def apply(values: NArray[Double]): CMY = dimensionCheck(values, 3).asInstanceOf[CMY]
+    def apply(values: NArray[Float]): CMY = dimensionCheck(values, 3).asInstanceOf[CMY]
 
-    def apply(cyan: Double, magenta: Double, yellow: Double): CMY = apply(NArray[Double](cyan, magenta, yellow))
+    def apply(cyan: Float, magenta: Float, yellow: Float): CMY = apply(NArray[Float](cyan, magenta, yellow))
 
 
     /**
@@ -48,44 +48,44 @@ trait CMY { self: WorkingSpace =>
      * @param yellow  a value between [0-1]
      * @return an instance of the CMY class.
      */
-    def getIfValid(cyan: Double, magenta: Double, yellow: Double): Option[CMY] = {
+    def getIfValid(cyan: Float, magenta: Float, yellow: Float): Option[CMY] = {
       if (valid0to1(cyan, magenta, yellow)) Some(apply(cyan, magenta, yellow))
       else None
     }
 
     override def random(r: scala.util.Random = Random.defaultRandom): CMY = apply(
-      NArray[Double](
-        r.nextDouble(),
-        r.nextDouble(),
-        r.nextDouble()
+      NArray[Float](
+        r.nextFloat(),
+        r.nextFloat(),
+        r.nextFloat()
       )
     )
 
-    def cyan(cmy: CMY): Double = cmy(0)
+    def cyan(cmy: CMY): Float = cmy(0)
 
-    def magenta(cmy: CMY): Double = cmy(1)
+    def magenta(cmy: CMY): Float = cmy(1)
 
-    def yellow(cmy: CMY): Double = cmy(2)
+    def yellow(cmy: CMY): Float = cmy(2)
 
     override def euclideanDistanceSquaredTo(cmy1: CMY, cmy2: CMY): Double = cmy1.euclideanDistanceSquaredTo(cmy2)
 
-    override def fromVec(v: Vec[3]): CMY = v.copy
+    override def fromVec(v: VecF[3]): CMY = v.copy
 
-    override def toVec(c: CMY): Vec[3] = c.asInstanceOf[Vec[3]].copy
+    override def toVec(c: CMY): VecF[3] = c.asInstanceOf[VecF[3]].copy
 
     override def toRGB(cmy: CMY): RGB = RGB.apply(
       clamp0to1(
-        1.0 - cmy.cyan,
-        1.0 - cmy.magenta,
-        1.0 - cmy.yellow
+        1f - cmy.cyan,
+        1f - cmy.magenta,
+        1f - cmy.yellow
       )
     )
 
     def fromRGB(rgb: RGB): CMY = apply(
       clamp0to1(
-        1.0 - rgb.red,
-        1.0 - rgb.green,
-        1.0 - rgb.blue
+        1f - rgb.red,
+        1f - rgb.green,
+        1f - rgb.blue
       )
     )
 
@@ -101,7 +101,7 @@ trait CMY { self: WorkingSpace =>
   /**
    * CMY is the primary type for representing colors in CMY space.
    *
-   * @constructor Create a new CMY object from three Double values.  This constructor does not validate input parameters.
+   * @constructor Create a new CMY object from three Float values.  This constructor does not validate input parameters.
    *              For values taken from user input, sensors, or otherwise uncertain sources, consider using the factory method in the Color companion object.
    * @see [[ai.dragonfly.color.CMY.getIfValid]] for a method of constructing CMY objects that validates inputs.
    * @see [[https://en.wikipedia.org/wiki/CMY_color_model]] for more information about the CMY color space.
@@ -118,11 +118,11 @@ trait CMY { self: WorkingSpace =>
   given VectorColorModel[CMY] with {
     extension (cmy: CMY) {
 
-      def cyan: Double = CMY.cyan(cmy)
+      def cyan: Float = CMY.cyan(cmy)
 
-      def magenta: Double = CMY.magenta(cmy)
+      def magenta: Float = CMY.magenta(cmy)
 
-      def yellow: Double = CMY.yellow(cmy)
+      def yellow: Float = CMY.yellow(cmy)
 
       override def toXYZ: XYZ = toRGB.toXYZ
 
@@ -132,7 +132,7 @@ trait CMY { self: WorkingSpace =>
 
       override def render: String = s"CMY($cyan, $magenta, $yellow)"
 
-      override def copy: CMY = cmy.asInstanceOf[Vec[3]].copy.asInstanceOf[CMY]
+      override def copy: CMY = cmy.asInstanceOf[VecF[3]].copy.asInstanceOf[CMY]
     }
   }
 

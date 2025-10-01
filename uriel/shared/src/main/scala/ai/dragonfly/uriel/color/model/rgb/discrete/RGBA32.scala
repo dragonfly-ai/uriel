@@ -25,7 +25,7 @@ import scala.language.implicitConversions
 
 trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
 
-  val `1/255`: Double = 1.0 / 255.0
+  val `1/255`: Float = 1f / 255f
 
   given Conversion[java.awt.Color, RGBA32] with
     def apply(jac: java.awt.Color): RGBA32 = RGBA32(jac.getRGB() << 24 | jac.getAlpha())
@@ -72,7 +72,7 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
      */
     def apply(red: Int, green: Int, blue: Int, alpha: Int): RGBA32 = apply((red << 24) | (green << 16) | (blue << 8) | alpha)
 
-    inline def clamp(red: Double, green: Double, blue: Double): Int = clamp(red, green, blue, MAX)
+    inline def clamp(red: Float, green: Float, blue: Float): Int = clamp(red, green, blue, MAX.toFloat)
 
     /**
      * Factory method to create a fully Opaque RGBA32 color; one with an alpha value of 255.
@@ -107,7 +107,7 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
       else None
     }
 
-    override def weightedAverage(c1: RGBA32, w1: Double, c2: RGBA32, w2: Double): RGBA32 = RGBA32(
+    override def weightedAverage(c1: RGBA32, w1: Float, c2: RGBA32, w2: Float): RGBA32 = RGBA32(
       ((c1.red * w1) + (c2.red * w2)).toInt,
       ((c1.green * w1) + (c2.green * w2)).toInt,
       ((c1.blue * w1) + (c2.blue * w2)).toInt,
@@ -125,7 +125,7 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
      * @return an RGBA32 instance encoding the desired grayscale intensity.
      */
     def grayIfValid(intensity: Int): Option[RGBA32] = {
-      if (valid0to1(intensity)) Some(apply(intensity, intensity, intensity))
+      if (valid(intensity)) Some(apply(intensity, intensity, intensity))
       else None
     }
 

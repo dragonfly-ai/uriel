@@ -17,13 +17,13 @@
 package ai.dragonfly.uriel.cie
 
 import narr.*
-import slash.matrix.*
+import slash.matrixf.*
 
 object ChromaticityPrimary {
   def inferThird(cp1: ChromaticityPrimary, cp2: ChromaticityPrimary): ChromaticityPrimary = ChromaticityPrimary(
-    1.0 - (cp1.x + cp2.x),
-    1.0 - (cp1.y + cp2.y),
-    1.0 - (cp1.Y + cp2.Y)
+    1f - (cp1.x + cp2.x),
+    1f - (cp1.y + cp2.y),
+    1f - (cp1.Y + cp2.Y)
   )
 }
 
@@ -34,7 +34,7 @@ object ChromaticityPrimary {
  * @param Y brightness of the primary
  */
 
-case class ChromaticityPrimary(x:Double, y:Double, Y:Double)
+case class ChromaticityPrimary(x:Float, y:Float, Y:Float)
 
 /**
  * Assumes:
@@ -51,14 +51,14 @@ case class ChromaticityPrimaries(red: ChromaticityPrimary, green: ChromaticityPr
 
   // from http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
 
-  def raw(S: NArray[Double] = NArray[Double](1.0, 1.0, 1.0)):NArray[Double] = NArray[Double](
+  def raw(S: NArray[Float] = NArray[Float](1f, 1f, 1f)):NArray[Float] = NArray[Float](
     S(0) * (red.x / red.y), S(1) * (green.x / green.y), S(2) * (blue.x / blue.y),
     S(0), S(1), S(2),
-    S(0) * ((1.0 - red.x - red.y) / red.y), S(1) * ((1.0 - green.x - green.y) / green.y), S(2) * ((1.0 - blue.x - blue.y) / blue.y)
+    S(0) * ((1f - red.x - red.y) / red.y), S(1) * ((1f - green.x - green.y) / green.y), S(2) * ((1f - blue.x - blue.y) / blue.y)
   )
 
-  lazy val xyzXrgbInv:Mat[3,3] = Mat[3,3]( raw() ).inverse
+  lazy val xyzXrgbInv:MatF[3,3] = MatF[3,3]( raw() ).inv
 
-  def getM(illuminant: Illuminant):Mat[3,3] = Mat[3,3](raw((xyzXrgbInv * illuminant.asColumnMatrix).values))
+  def getM(illuminant: Illuminant):MatF[3,3] = MatF[3,3](raw((xyzXrgbInv * illuminant.asColumnMatrix).values))
 
 }

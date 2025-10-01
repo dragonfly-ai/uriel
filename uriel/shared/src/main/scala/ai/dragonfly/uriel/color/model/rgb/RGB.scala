@@ -22,9 +22,10 @@ import ai.dragonfly.uriel.cie.*
 
 import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
-import slash.Random
-import slash.matrix.*
-import slash.vector.*
+
+import slash.*
+import slash.matrixf.*
+import slash.vectorf.*
 
 import scala.language.implicitConversions
 
@@ -32,18 +33,18 @@ trait RGB { self: WorkingSpace =>
 
   object RGB extends VectorSpace[RGB] {
 
-    opaque type RGB = Vec[3]
+    opaque type RGB = VecF[3]
 
-    override lazy val usableGamut: Gamut = new Gamut( Cube(1.0, 32) )
+    override lazy val usableGamut: Gamut = new Gamut( Cube(1.0, 32).toMeshF )
 
     override val maxDistanceSquared: Double = 3.0
 
-    def apply(values: NArray[Double]): RGB = dimensionCheck(values, 3).asInstanceOf[RGB]
+    def apply(values: NArray[Float]): RGB = dimensionCheck(values, 3).asInstanceOf[RGB]
 
     /**
      * Factory method to create a fully opaque RGB instance from separate, specified red, green, blue components and
      * a default alpha value of 1.0.
-     * Double values that range outside of [0.0-1.0] may give unexpected results.  For values taken from user input, sensors,
+     * Float values that range outside of [0.0-1.0] may give unexpected results.  For values taken from user input, sensors,
      * or otherwise uncertain sources, consider using the factory method in the Color companion object.
      *
      * @see [[ai.dragonfly.color.ColorVectorSpace.RGB]] for a method of constructing RGB objects that validates inputs.
@@ -53,7 +54,7 @@ trait RGB { self: WorkingSpace =>
      * @return an instance of the RGB case class.
      * @example {{{ val c = RGB(72,105,183) }}}
      */
-    def apply(red: Double, green: Double, blue: Double): RGB = apply(NArray[Double](red, green, blue))
+    def apply(red: Float, green: Float, blue: Float): RGB = apply(NArray[Float](red, green, blue))
 
     /**
      * Factory method to create a fully Opaque RGB color; one with an alpha value of 1.0.
@@ -69,7 +70,7 @@ trait RGB { self: WorkingSpace =>
      * @return an instance of the RGB class or None if fed invalid input.
      */
 
-    def getIfValid(red: Double, green: Double, blue: Double): Option[RGB] = {
+    def getIfValid(red: Float, green: Float, blue: Float): Option[RGB] = {
       if (valid0to1(red, green, blue)) Some(apply(red, green, blue))
       else None
     }
@@ -83,23 +84,23 @@ trait RGB { self: WorkingSpace =>
      *
      * @return a randomly generated color sampled from the RGB Color ColorSpace.
      */
-    override def random(r: scala.util.Random = Random.defaultRandom): RGB = Vec[3](r.nextDouble(), r.nextDouble(), r.nextDouble())
+    override def random(r: scala.util.Random = Random.defaultRandom): RGB = VecF[3](r.nextFloat(), r.nextFloat(), r.nextFloat())
 
-    def red(rgb:RGB):Double = rgb(0)
-    def green(rgb:RGB):Double = rgb(1)
-    def blue(rgb:RGB):Double = rgb(2)
+    def red(rgb:RGB):Float = rgb(0)
+    def green(rgb:RGB):Float = rgb(1)
+    def blue(rgb:RGB):Float = rgb(2)
 
     override def euclideanDistanceSquaredTo(c1: RGB, c2: RGB): Double = c1.euclideanDistanceSquaredTo(c2)
 
-    override def fromVec(v: Vec[3]): RGB = v
+    override def fromVec(v: VecF[3]): RGB = v
 
-    override def toVec(rgb: RGB): Vec[3] = rgb.asInstanceOf[Vec[3]].copy
+    override def toVec(rgb: RGB): VecF[3] = rgb.asInstanceOf[VecF[3]].copy
 
     override def toRGB(rgb: RGB): RGB = rgb.copy
     override def fromRGB(rgb: RGB): RGB = rgb.copy
 
     override def toXYZ(rgb: RGB): XYZ = {
-      (M * Mat[3, 1](
+      (M * MatF[3, 1](
         transferFunction.decode(rgb.red),
         transferFunction.decode(rgb.green),
         transferFunction.decode(rgb.blue)
@@ -115,11 +116,11 @@ trait RGB { self: WorkingSpace =>
   given VectorColorModel[RGB] with {
     extension (rgb: RGB) {
 
-      def red: Double = RGB.red(rgb)
+      def red: Float = RGB.red(rgb)
 
-      def green: Double = RGB.green(rgb)
+      def green: Float = RGB.green(rgb)
 
-      def blue: Double = RGB.blue(rgb)
+      def blue: Float = RGB.blue(rgb)
 
       override def render: String = s"RGB($red, $green, $blue)"
 
