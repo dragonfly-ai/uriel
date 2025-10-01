@@ -165,14 +165,14 @@ trait ARGB64 extends DiscreteRGB { self: WorkingSpace =>
       /**
        * @return the green component of this color in ARGB64 space.
        */
-      override def green: Int = (argb >> 16 & 0xFFFFL).toInt
+      override inline def green: Int = (argb >> 16 & 0xFFFFL).toInt
 
       /**
        * @return the blue component of this color in ARGB64 space.
        */
-      override def blue: Int = (argb & 0xFFFFL).toInt
+      override inline def blue: Int = (argb & 0xFFFFL).toInt
 
-      override def toRGB: RGB = {
+      override inline def toRGB: RGB = {
         import ARGB64.MAXD
         RGB(red.toFloat / MAXD, green.toFloat / MAXD, blue.toFloat / MAXD)
       }

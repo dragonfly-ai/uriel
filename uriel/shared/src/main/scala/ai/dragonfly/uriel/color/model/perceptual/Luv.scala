@@ -127,11 +127,11 @@ trait Luv { self: WorkingSpace =>
   given PerceptualColorModel[Luv] with {
     extension (luv: Luv) {
 
-      def L: Float = Luv.L(luv)
+      inline def L: Float = Luv.L(luv)
 
-      def u: Float = Luv.u(luv)
+      inline def u: Float = Luv.u(luv)
 
-      def v: Float = Luv.v(luv)
+      inline def v: Float = Luv.v(luv)
 
       override def render: String = s"L⭑u⭑v⭑($L,$u,$v)"
 

@@ -129,11 +129,11 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
 
       //case class HSV private(override val values: NArray[Float]) extends HueSaturation[HSV] {
 
-      def hue: Float = HSV.hue(hsv)
+      inline def hue: Float = HSV.hue(hsv)
 
-      def saturation: Float = HSV.saturation(hsv)
+      inline def saturation: Float = HSV.saturation(hsv)
 
-      def value: Float = HSV.value(hsv)
+      inline def value: Float = HSV.value(hsv)
 
       // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
       def toRGB: RGB = HSV.toRGB(hsv)

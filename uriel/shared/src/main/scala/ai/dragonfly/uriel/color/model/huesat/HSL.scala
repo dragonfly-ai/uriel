@@ -137,11 +137,11 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
 
   given CylindricalColorModel[HSL] with {
     extension (hsl: HSL) {
-      def hue: Float = HSL.hue(hsl)
+      inline def hue: Float = HSL.hue(hsl)
 
-      def saturation: Float = HSL.saturation(hsl)
+      inline def saturation: Float = HSL.saturation(hsl)
 
-      def lightness: Float = HSL.lightness(hsl)
+      inline def lightness: Float = HSL.lightness(hsl)
 
       override def similarity(that: HSL): Double = HSL.similarity(hsl, that)
 

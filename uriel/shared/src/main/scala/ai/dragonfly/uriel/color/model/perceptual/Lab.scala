@@ -103,11 +103,11 @@ trait Lab { self: WorkingSpace =>
 
       override inline def copy: Lab = Lab(a, b, L)
 
-      def L: Float = Lab.L(lab)
+      inline def L: Float = Lab.L(lab)
 
-      def a: Float = Lab.a(lab)
+      inline def a: Float = Lab.a(lab)
 
-      def b: Float = Lab.b(lab)
+      inline def b: Float = Lab.b(lab)
 
       def toXYZ: XYZ = Lab.toXYZ(lab)
 

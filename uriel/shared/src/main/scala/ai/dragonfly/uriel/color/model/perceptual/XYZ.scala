@@ -50,11 +50,11 @@ trait XYZ { self:WorkingSpace =>
 
     def apply(x: Float, y: Float, z: Float): XYZ = VecF[3](x, y, z)
 
-    def x(xyz: XYZ): Float = xyz(0)
+    inline def x(xyz: XYZ): Float = xyz(0)
 
-    def y(xyz: XYZ): Float = xyz(1)
+    inline def y(xyz: XYZ): Float = xyz(1)
 
-    def z(xyz: XYZ): Float = xyz(2)
+    inline def z(xyz: XYZ): Float = xyz(2)
 
     override def toRGB(xyz: XYZ): RGB = {
       val temp: NArray[Float] = (M_inverse * xyz.asColumnMatrix).values

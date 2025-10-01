@@ -116,11 +116,11 @@ trait LRGB { self: WorkingSpace =>
   given VectorColorModel[LRGB] with {
     extension (lrgb: LRGB) {
 
-      def red: Float = LRGB.red(lrgb)
+      inline def red: Float = LRGB.red(lrgb)
 
-      def green: Float = LRGB.green(lrgb)
+      inline def green: Float = LRGB.green(lrgb)
 
-      def blue: Float = LRGB.blue(lrgb)
+      inline def blue: Float = LRGB.blue(lrgb)
 
       override def render: String = s"LRGB($red, $green, $blue)"
 
