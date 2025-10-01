@@ -50,11 +50,11 @@ trait XYZ { self:WorkingSpace =>
 
     def apply(x: Float, y: Float, z: Float): XYZ = VecF[3](x, y, z)
 
-    inline def x(xyz: XYZ): Float = xyz(0)
+    def x(xyz: XYZ): Float = xyz(0)
 
-    inline def y(xyz: XYZ): Float = xyz(1)
+    def y(xyz: XYZ): Float = xyz(1)
 
-    inline def z(xyz: XYZ): Float = xyz(2)
+    def z(xyz: XYZ): Float = xyz(2)
 
     override def toRGB(xyz: XYZ): RGB = {
       val temp: NArray[Float] = (M_inverse * xyz.asColumnMatrix).values
@@ -87,11 +87,11 @@ trait XYZ { self:WorkingSpace =>
     extension (xyz: XYZ) {
       override inline def copy: XYZ = XYZ.copy(xyz)
 
-      def x: Float = XYZ.x(xyz)
+      inline def x: Float = XYZ.x(xyz)
 
-      def y: Float = XYZ.y(xyz)
+      inline def y: Float = XYZ.y(xyz)
 
-      def z: Float = XYZ.z(xyz)
+      inline def z: Float = XYZ.z(xyz)
 
       override def similarity(that: XYZ): Double = XYZ.similarity(xyz, that)
 
