@@ -48,4 +48,5 @@ case class Illuminant(xₙ: Float, yₙ: Float /* Always 1f? */, zₙ: Float) {
   lazy val `1/yₙ`: Float = 1f / yₙ
   lazy val whitePointValues: NArray[Float] = NArray[Float](xₙ, yₙ, zₙ)
   lazy val asColumnMatrix:MatF[3, 1] = MatF[3,1](whitePointValues)
+  lazy val asColumnMatrixAlpha:MatF[4, 1] = MatF[4,1](NArray[Float](xₙ, yₙ, zₙ, 1f))
 }

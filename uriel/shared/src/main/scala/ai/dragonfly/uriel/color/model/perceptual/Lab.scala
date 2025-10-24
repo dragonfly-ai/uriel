@@ -22,18 +22,24 @@ import ai.dragonfly.uriel.cie.Constant.*
 import slash.*
 import slash.vectorf.*
 
+import scala.util.Random
+
 trait Lab { self: WorkingSpace =>
 
-  object Lab extends PerceptualSpace[Lab] {
+  object Lab extends PerceptualSpace[3, Lab] {
 
     opaque type Lab = VecF[3]
 
     override lazy val fullGamut: Gamut = Gamut.fromSpectralSamples(
       cmf,
-      (v: VecF[3]) => toVec(fromXYZ(XYZ(whitePoint.x * v.x, whitePoint.y * v.y, whitePoint.z * v.z)))
+      (v: VecF[3]) => fromXYZ(XYZ(whitePoint.x * v.x, whitePoint.y * v.y, whitePoint.z * v.z)).vec
     )
 
-    override lazy val usableGamut: Gamut = Gamut.fromRGB( 32, (xyz: XYZ) => toVec(fromXYZ(xyz)) )
+    override lazy val usableGamut: Gamut = Gamut.fromRGB( 32, (xyz: XYZ) => fromXYZ(xyz).vec )
+
+    override def random(r: Random): Lab = usableGamut.random(r)
+
+    override def maxDistanceSquared: Double = usableGamut.maxDistSquared
 
     def apply(values: NArray[Float]): Lab = dimensionCheck(values, 3).asInstanceOf[Lab]
 
@@ -58,30 +64,31 @@ trait Lab { self: WorkingSpace =>
 
     override def fromVec(v: VecF[3]): Lab = v
 
-    override def toVec(lab: Lab): VecF[3] = lab.asInstanceOf[VecF[3]].copy
+    override def fromRGBA(rgba: RGBA): Lab = fromXYZ(rgba.toXYZ)
 
-    override def toRGB(lab: Lab): RGB = lab.toXYZ.toRGB
+//    override def toVec(lab: Lab): VecF[3] = lab.asInstanceOf[VecF[3]].copy
+//
+//    override def toRGB(lab: Lab): RGB = lab.toXYZ.toRGB
 
-    override def toXYZ(lab: Lab): XYZ = {
-      //val white: XYZ = whitePoint //XYZ(illuminant.whitePointValues)
-      val fy: Double = `1/116` * (lab.L + 16.0)
-
-      XYZ(
-        (fInverse((0.002 * lab.a) + fy) * illuminant.xₙ).toFloat, // X
-        (if (lab.L > kϵ) {
-          val l = lab.L + 16.0
-          `1/116³` * (l * l * l) * illuminant.yₙ
-        } else `1/k` * lab.L * illuminant.yₙ).toFloat, // Y
-        (fInverse(fy - (0.005 * lab.b)) * illuminant.zₙ).toFloat, // Z
-      )
-    }
+//    override def toXYZ(lab: Lab): XYZ = {
+//      //val white: XYZ = whitePoint //XYZ(illuminant.whitePointValues)
+//      val fy: Double = `1/116` * (lab.L + 16.0)
+//
+//      XYZ(
+//        (fInverse((0.002 * lab.a) + fy) * illuminant.xₙ).toFloat, // X
+//        (if (lab.L > kϵ) {
+//          val l = lab.L + 16.0
+//          `1/116³` * (l * l * l) * illuminant.yₙ
+//        } else `1/k` * lab.L * illuminant.yₙ).toFloat, // Y
+//        (fInverse(fy - (0.005 * lab.b)) * illuminant.zₙ).toFloat, // Z
+//      )
+//    }
 
     /**
      * Requires a reference 'white' because although black provides a lower bound for XYZ values, they have no upper bound.
      *
-     * @param xyz
-     * @param illuminant
-     * @return
+     * @param xyz an xyz color
+     * @return a Laab color
      */
     def fromXYZ(xyz: XYZ): Lab = {
       val fy: Double = f(illuminant.`1/yₙ` * xyz.y)
@@ -93,12 +100,15 @@ trait Lab { self: WorkingSpace =>
       )
     }
 
+    override def fromXYZA(xyza: XYZA): Lab = fromXYZ(xyza.toXYZ)
+
     override def toString:String = "Lab"
+
   }
 
   type Lab = Lab.Lab
 
-  given PerceptualColorModel[Lab] with {
+  given PerceptualColorModel[3, Lab] with {
     extension (lab: Lab) {
 
       override inline def copy: Lab = Lab(a, b, L)
@@ -109,13 +119,48 @@ trait Lab { self: WorkingSpace =>
 
       inline def b: Float = Lab.b(lab)
 
-      def toXYZ: XYZ = Lab.toXYZ(lab)
-
       override def similarity(that: Lab): Double = Lab.similarity(lab, that)
 
-      override def toRGB: RGB = Lab.toRGB(lab)
+      override def vec: VecF[3] = lab.asInstanceOf[VecF[3]].copy
+
+      override def toRGB: RGB = toXYZ.toRGB
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, 1f)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      def toXYZ: XYZ = {
+        //val white: XYZ = whitePoint //XYZ(illuminant.whitePointValues)
+        val fy: Double = `1/116` * (lab.L + 16.0)
+
+        XYZ(
+          (Lab.fInverse((0.002 * lab.a) + fy) * illuminant.xₙ).toFloat, // X
+          (if (lab.L > kϵ) {
+            val l = lab.L + 16.0
+              `1/116³` * (l * l * l) * illuminant.yₙ
+          } else `1/k` * lab.L * illuminant.yₙ).toFloat, // Y
+          (Lab.fInverse(fy - (0.005 * lab.b)) * illuminant.zₙ).toFloat, // Z
+        )
+      }
+
+      override def toXYZA: XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, 1f)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
 
       override def render: String = s"L*a*b*($L,$a,$b)"
+
     }
   }
 }

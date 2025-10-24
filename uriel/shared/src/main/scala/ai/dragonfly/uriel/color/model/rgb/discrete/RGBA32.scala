@@ -28,7 +28,7 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
   val `1/255`: Float = 1f / 255f
 
   given Conversion[java.awt.Color, RGBA32] with
-    def apply(jac: java.awt.Color): RGBA32 = RGBA32(jac.getRGB() << 24 | jac.getAlpha())
+    def apply(jac: java.awt.Color): RGBA32 = RGBA32(jac.getRGB << 24 | jac.getAlpha)
 
   given Conversion[RGBA32, java.awt.Color] with
     def apply(c: RGBA32): java.awt.Color = new java.awt.Color(c.red, c.green, c.blue, c.alpha)
@@ -37,7 +37,7 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
 
     opaque type RGBA32 = Int
 
-    def apply(rgba: Int): RGBA32 = rgba.asInstanceOf[RGBA32]
+    def apply(rgba: Int): RGBA32 = rgba
 
     /**
      * Factory method to create a fully opaque RGBA32 instance from separate, specified red, green, blue components and
@@ -114,10 +114,6 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
       ((c1.alpha * w1) + (c2.alpha * w2)).toInt
     )
 
-    override def fromXYZ(xyz: XYZ): RGBA32 = fromRGB(xyz.toRGB)
-
-    override def fromRGB(rgb: RGB): RGBA32 = apply(clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX))
-
     /**
      * Generate an RGBA32 instance from a single value.  This method validates the intensity parameter at some cost to performance.
      *
@@ -179,9 +175,10 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
      */
     inline def html(rgba:RGBA32): String = "#" + Integer.toHexString(rgba | 0xff000000).substring(2)
 
-    override def toRGB(c: RGBA32): RGB = c.toRGB
+    override def fromRGB(rgb: RGB): RGBA32 = apply(clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX))
 
-    override def toXYZ(c: RGBA32): XYZ = c.toXYZ
+    override def fromRGBA(rgba: RGBA): RGBA32 = apply(clamp(rgba.alpha * MAX, rgba.red * MAX, rgba.green * MAX, rgba.blue * MAX))
+
   }
 
   type RGBA32 = RGBA32.RGBA32
@@ -223,10 +220,6 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
        * @return the alpha component of this color in RGBA32 space.
        */
       inline def alpha: Int = RGBA32.alpha(rgba)
-
-      override def toRGB: RGB = RGB(`1/255` * red, `1/255` * green, `1/255` * blue)
-
-      override def similarity(that: RGBA32): Double = RGBA32.similarity(rgba, that)
 
       /**
        * @return a hexadecimal string representing the rgba integer for this color.
@@ -281,14 +274,33 @@ trait RGBA32 extends DiscreteRGB { self: WorkingSpace =>
        */
       inline def css: String = svg
 
-      override def render: String = s"RGBA32($red, $green, $blue, $alpha)"
-
-      override def toXYZ: XYZ = toRGB.toXYZ
-
       override def copy: RGBA32 = {
         val i: Int = rgba.asInstanceOf[Int]
         i.asInstanceOf[RGBA32]
       }
+
+      override def similarity(that: RGBA32): Double = RGBA32.similarity(rgba, that)
+
+      override def toRGB: RGB = RGB(`1/255` * red, `1/255` * green, `1/255` * blue)
+
+      override def toRGBA: RGBA = RGBA( `1/255` * red, `1/255` * green, `1/255` * blue, `1/255` * alpha)
+
+      override def toRGBA(alpha: Float): RGBA = RGBA( `1/255` * red, `1/255` * green, `1/255` * blue,  alpha)
+
+      override def toXYZ: XYZ = toRGB.toXYZ
+
+      override def toXYZA: XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, `1/255` * alpha)
+      }
+
+      override def toXYZA(alpha:Float): XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def render: String = s"RGBA32($red, $green, $blue, $alpha)"
+
     }
   }
 }

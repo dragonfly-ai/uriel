@@ -34,6 +34,7 @@ import scala.collection.mutable
 trait Gamut { self: WorkingSpace =>
   object Gamut {
 
+    // Why can't to sRGB_ARGB32 be a method in every color model?
     val XYZtoARGB32: VecF[3] => ColorContext.sRGB.ARGB32 = {
       import ColorContext.sRGB
       if (self == sRGB.ARGB32) {
@@ -164,12 +165,6 @@ trait Gamut { self: WorkingSpace =>
 //    println("defined Gamut object methods")
   }
 
-
-  /**
-   *
-   * @param tetrahedra
-   * @param cumulative
-   */
 
   case class Gamut (volumeMesh:MeshF) extends Sampleable[VecF[3]] {
 

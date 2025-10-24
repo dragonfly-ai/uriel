@@ -41,7 +41,7 @@ trait ARGB32 extends DiscreteRGB { self: WorkingSpace =>
 
     opaque type ARGB32 = Int
 
-    def apply(argb: Int): ARGB32 = argb.asInstanceOf[ARGB32]
+    def apply(argb: Int): ARGB32 = argb
 
     /**
      * Factory method to create a fully opaque ARGB instance from separate, specified red, green, blue components and
@@ -141,13 +141,8 @@ trait ARGB32 extends DiscreteRGB { self: WorkingSpace =>
     override def random(r: scala.util.Random = Random.defaultRandom): ARGB32 = 0xFF000000 | r.nextInt(0xFFFFFF)
 
     override def fromRGB(rgb: RGB): ARGB32 = apply(clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX))
-    override def toRGB(argb: ARGB32): RGB = {
-      import ARGB32.MAXD
-      RGB(argb.red.toFloat / MAXD, argb.green.toFloat / MAXD, argb.blue.toFloat / MAXD)
-    }
 
-    override def fromXYZ(xyz: XYZ): ARGB32 = fromRGB(xyz.toRGB)
-    override def toXYZ(c: ARGB32): XYZ = c.toXYZ
+    override def fromRGBA(rgba: RGBA): ARGB32 = apply(clamp(rgba.alpha, rgba.red * MAX, rgba.green * MAX, rgba.blue * MAX))
 
     override def toString:String = "ARGB32"
   }
@@ -192,7 +187,10 @@ trait ARGB32 extends DiscreteRGB { self: WorkingSpace =>
        */
       override inline def blue: Int = argb & 0xff
 
-      override def toRGB: RGB = ARGB32.toRGB(argb)
+      override def copy: ARGB32 = {
+        val i:Int = argb.asInstanceOf[Int]
+        i.asInstanceOf[ARGB32]
+      }
 
       override def similarity(that: ARGB32): Double = ARGB32.similarity(argb, that)
 
@@ -249,14 +247,40 @@ trait ARGB32 extends DiscreteRGB { self: WorkingSpace =>
        */
       def css: () => String = svg
 
-      override def render: String = s"ARGB32($alpha, $red, $green, $blue)"
+      override def toRGB: RGB = RGB(
+        red.toFloat / ARGB32.MAXF,
+        green.toFloat / ARGB32.MAXF,
+        blue.toFloat / ARGB32.MAXF
+      )
+
+      override def toRGBA: RGBA = RGBA(
+        alpha.toFloat / ARGB32.MAXF,
+        red.toFloat / ARGB32.MAXF,
+        green.toFloat / ARGB32.MAXF,
+        blue.toFloat / ARGB32.MAXF
+      )
+
+      override def toRGBA(alpha: Float): RGBA = RGBA(
+        alpha / ARGB32.MAXF,
+        red.toFloat / ARGB32.MAXF,
+        green.toFloat / ARGB32.MAXF,
+        blue.toFloat / ARGB32.MAXF
+      )
 
       override def toXYZ: XYZ = toRGB.toXYZ
 
-      override def copy: ARGB32 = {
-        val i:Int = argb.asInstanceOf[Int]
-        i.asInstanceOf[ARGB32]
+      override def toXYZA: XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, argb.alpha / ARGB32.MAXF)
       }
+
+      override def toXYZA(alpha:Float): XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def render: String = s"ARGB32($alpha, $red, $green, $blue)"
+
     }
   }
 

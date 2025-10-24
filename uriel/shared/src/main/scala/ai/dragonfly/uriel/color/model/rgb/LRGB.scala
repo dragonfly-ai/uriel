@@ -29,7 +29,7 @@ import scala.language.implicitConversions
 
 trait LRGB { self: WorkingSpace =>
 
-  object LRGB extends VectorSpace[LRGB] {
+  object LRGB extends VectorSpace[3, LRGB] {
 
     opaque type LRGB = VecF[3]
 
@@ -92,28 +92,28 @@ trait LRGB { self: WorkingSpace =>
 
     override def fromVec(v: VecF[3]): LRGB = v
 
-    override def toVec(lrgb: LRGB): VecF[3] = lrgb.asInstanceOf[VecF[3]].copy
-
-    override def toRGB(lrgb: LRGB): RGB = RGB(
-      transferFunction.encode(lrgb.red),
-      transferFunction.encode(lrgb.green),
-      transferFunction.encode(lrgb.blue),
-    )
     override def fromRGB(rgb: RGB): LRGB = LRGB(
       transferFunction.decode(rgb.red),
       transferFunction.decode(rgb.green),
       transferFunction.decode(rgb.blue)
     )
 
-    override def toXYZ(lrgb: LRGB): XYZ = (M * MatF[3, 1]( lrgb.red, lrgb.green, lrgb.blue )).values.asInstanceOf[XYZ]
+    override def fromRGBA(rgba: RGBA): LRGB = LRGB(
+      transferFunction.decode(rgba.red),
+      transferFunction.decode(rgba.green),
+      transferFunction.decode(rgba.blue),
+    )
+
     override def fromXYZ(xyz:XYZ):LRGB = LRGB((M_inverse * xyz.vec.asColumnMatrix).values)
 
+    override def fromXYZA(xyza: XYZA): LRGB = fromXYZ(xyza.toXYZ)
+    
     override def toString:String = "LRGB"
   }
 
   type LRGB = LRGB.LRGB
 
-  given VectorColorModel[LRGB] with {
+  given VectorColorModel[3, LRGB] with {
     extension (lrgb: LRGB) {
 
       inline def red: Float = LRGB.red(lrgb)
@@ -122,16 +122,45 @@ trait LRGB { self: WorkingSpace =>
 
       inline def blue: Float = LRGB.blue(lrgb)
 
-      override def render: String = s"LRGB($red, $green, $blue)"
-
       def copy: LRGB = LRGB(red, green, blue)
 
-      override def toXYZ: XYZ = LRGB.toXYZ(lrgb)
+      override def vec: VecF[3] = lrgb.asInstanceOf[VecF[3]].copy
 
       override def similarity(that: LRGB): Double = LRGB.similarity(lrgb, that)
 
-      override def toRGB: RGB = LRGB.toRGB(lrgb)
-    }
+      override def toRGB: RGB = RGB(
+        transferFunction.encode(lrgb.red),
+        transferFunction.encode(lrgb.green),
+        transferFunction.encode(lrgb.blue)
+      )
 
+      override def toRGBA: RGBA = RGBA(
+        transferFunction.encode(lrgb.red),
+        transferFunction.encode(lrgb.green),
+        transferFunction.encode(lrgb.blue),
+        1f
+      )
+
+      override def toRGBA(alpha: Float): RGBA = RGBA(
+        transferFunction.encode(lrgb.red),
+        transferFunction.encode(lrgb.green),
+        transferFunction.encode(lrgb.blue),
+        alpha
+      )
+
+      override def toXYZ: XYZ = (M * MatF[3, 1]( lrgb.red, lrgb.green, lrgb.blue )).values.asInstanceOf[XYZ]
+
+      override def toXYZA: XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, 1f)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def render: String = s"LRGB($red, $green, $blue)"
+    }
   }
 }

@@ -20,7 +20,6 @@ import narr.*
 import slash.*
 import slash.vectorf.*
 import matrixf.*
-
 import ai.dragonfly.uriel.color.model.*
 import ai.dragonfly.uriel.color.model.perceptual.XYZ
 import ai.dragonfly.uriel.color.model.rgb.RGB
@@ -28,10 +27,8 @@ import ai.dragonfly.uriel.color.spectral.*
 import slash.stats.probability.distributions.Sampleable
 
 import scala.collection.{immutable, mutable}
-import scala.util.Random
 
-
-trait WorkingSpace extends XYZ with RGB with Gamut {
+trait WorkingSpace extends RGB with XYZ with Gamut {
 
   val transferFunction: TransferFunction
   val primaries: ChromaticityPrimaries
@@ -53,23 +50,37 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
 
   trait ColorModel[C] {
     extension (c: C) {
+      def to_sRGB_ARGB32: ai.dragonfly.mesh.sRGB.ARGB32 = {
+        import ai.dragonfly.uriel.ColorContext.sRGB
+        val xyza = toXYZA
+        if (ctx == sRGB) sRGB.ARGB32.fromXYZA(sRGB.XYZA(xyza.x, xyza.y, xyza.z, xyza.alpha)).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+        else {
+          val chromaticAdapter: ChromaticAdaptationAlpha[ctx.type, sRGB.type] = ChromaticAdaptationAlpha[ctx.type, sRGB.type](ctx, sRGB)
+          val xyza: chromaticAdapter.source.XYZA = toXYZA.asInstanceOf[chromaticAdapter.source.XYZA]
+          sRGB.ARGB32.fromXYZA(chromaticAdapter(xyza)).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+        }
+      }
       def toRGB: RGB
+      def toRGBA: RGBA
+      def toRGBA(alpha: Float): RGBA
       def toXYZ: XYZ
+      def toXYZA: XYZA
+      def toXYZA(alpha: Float): XYZA
       def render: String
       def similarity(thatColor:C): Double
       def copy: C
     }
   }
 
-  trait VectorColorModel[C] extends ColorModel[C] {
-    extension (c:C) def vec: VecF[3] = c.asInstanceOf[VecF[3]]
+  trait VectorColorModel[N <: Int, C](using ValueOf[N]) extends ColorModel[C] {
+    extension (c:C) def vec: VecF[N] = c.asInstanceOf[VecF[N]]
   }
 
   trait DiscreteColorModel[C] extends ColorModel[C]
 
-  trait CylindricalColorModel[C] extends VectorColorModel[C]
+  trait CylindricalColorModel[N <: Int, C](using ValueOf[N]) extends VectorColorModel[N, C]
 
-  trait HueSaturationModel[C] extends CylindricalColorModel[C] {
+  trait HueSaturationModel[N <: Int, C](using ValueOf[N]) extends CylindricalColorModel[N, C] {
     extension (c: C) {
       def hue: Float
       def saturation: Float
@@ -77,7 +88,7 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
     }
   }
 
-  trait PerceptualColorModel[C] extends VectorColorModel[C]
+  trait PerceptualColorModel[N <: Int, C](using ValueOf[N]) extends VectorColorModel[N, C]
 
   /**
    * ColorSpace traits for companion objects of Color Models.
@@ -101,11 +112,32 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
     def euclideanDistanceTo(c1: C, c2: C):Double = Math.sqrt(euclideanDistanceSquaredTo(c1, c2))
     def similarity(c1: C, c2: C): Double = 1.0 - Math.sqrt(euclideanDistanceSquaredTo(c1, c2) / maxDistanceSquared)
 
-    def toRGB(c:C):RGB
-    def fromRGB(rgb:RGB):C
+//    def toRGB(c:C):RGB
+//    def toRGBA(c:C):RGBA
+//    def toRGBA(c:C, alpha:Float):RGBA
 
-    def toXYZ(c:C):XYZ
+    def from_sRGB_ARGB32(sRGBargb32: ai.dragonfly.mesh.sRGB.ARGB32):C = {
+      import ai.dragonfly.uriel.ColorContext.sRGB
+
+      val argb:sRGB.ARGB32 = sRGBargb32.asInstanceOf[sRGB.ARGB32]
+
+      if (ctx == sRGB) fromXYZA(argb.toXYZA.asInstanceOf[XYZA])
+      else {
+        val chromaticAdapter: ChromaticAdaptationAlpha[sRGB.type, ctx.type] = ChromaticAdaptationAlpha[sRGB.type, ctx.type](sRGB, ctx)
+        val xyza: sRGB.XYZA = argb.toXYZA
+        fromXYZA(chromaticAdapter(xyza).asInstanceOf[XYZA])
+      }
+    }
+    def fromRGB(rgb:RGB):C
+    def fromRGBA(rgba:RGBA):C
+
+//    def toXYZ(c:C):XYZ
+//
+//    def toXYZA(c:C):XYZ
+//    def toXYZA(c:C, alpha: Float):RGB
+
     def fromXYZ(xyz:XYZ):C
+    def fromXYZA(xyza:XYZA):C
 
   }
 
@@ -113,7 +145,7 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
 
   }
 
-  trait VectorSpace[C: VectorColorModel] extends ColorSpace[C] {
+  trait VectorSpace[N <: Int, C: VectorColorModel[N, _]](using ValueOf[N]) extends ColorSpace[C] {
 
     def usableGamut:Gamut
 
@@ -125,43 +157,44 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
      * @param w2 the weight of the second color in the range of [0-1].
      * @return the weighted average: c1 * w1 + c2 * w2.
      */
-    def weightedAverage(c1: C, w1: Float, c2: C, w2: Float): C = fromVec((toVec(c1) * w1) + (toVec(c2) * w2))
+    def weightedAverage(c1: C, w1: Float, c2: C, w2: Float): C = fromVec((c1.vec * w1) + (c2.vec * w2))
 
     def apply(values:NArray[Float]):C
 
-    override def euclideanDistanceSquaredTo(c1: C, c2: C): Double //= c1.euclideanDistanceSquaredTo(c2)
+    def fromVec(v: VecF[N]): C
 
-    def fromVec(v: VecF[3]): C
-    def toVec(c: C): VecF[3]
+//    def toVec(c: C): VecF[N]
 
-    def fromVec2sRGB_ARGB(v: VecF[3]): ai.dragonfly.mesh.sRGB.ARGB32 = {
-      Gamut.XYZtoARGB32(
-        toXYZ(
-          fromVec(v)
-        ).asInstanceOf[VecF[3]]
-      ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
-    }
+    //def vecTo_sRGB_ARGB(v: VecF[N]): ai.dragonfly.mesh.sRGB.ARGB32
+
+//    def fromVec2sRGB_ARGB(v: VecF[3]): ai.dragonfly.mesh.sRGB.ARGB32 = {
+//      Gamut.XYZtoARGB32(
+//        toXYZ(
+//          fromVec(v)
+//        ).asInstanceOf[VecF[3]]
+//      ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+//    }
   }
 
-  trait CylindricalSpace[C: CylindricalColorModel] extends VectorSpace[C] {
+  trait CylindricalSpace[N <: Int, C: CylindricalColorModel[N, _]](using ValueOf[N]) extends VectorSpace[N, C] {
 
   }
 
-  trait PerceptualSpace[C: PerceptualColorModel] extends VectorSpace[C] {
+  trait PerceptualSpace[N <: Int, C: PerceptualColorModel[N, _]](using ValueOf[N]) extends VectorSpace[N, C] {
 
     def apply(c1: Float, c2: Float, c3: Float): C
+
+    override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = c1.vec.euclideanDistanceSquaredTo(c2.vec)
 
     override def fromRGB(rgb: RGB): C = fromXYZ(rgb.toXYZ)
 
     def fullGamut:Gamut
 
-    override lazy val maxDistanceSquared:Double = usableGamut.maxDistSquared
+//    override lazy val maxDistanceSquared:Double = usableGamut.maxDistSquared
+//    override def random(r: Random = slash.Random.defaultRandom): C = fromVec(usableGamut.random(r))
+//    override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = c1.asInstanceOf[VecF[3]].euclideanDistanceSquaredTo(c1.asInstanceOf[VecF[3]])
 
-    override def random(r: Random = slash.Random.defaultRandom): C = fromVec(usableGamut.random(r))
-
-    override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = c1.asInstanceOf[VecF[3]].euclideanDistanceSquaredTo(c1.asInstanceOf[VecF[3]])
   }
-
 
   override def toString: String = this.getClass.getSimpleName.replace('$', '_')
 
@@ -200,7 +233,6 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
     /**
      * Search the palette for the closest match to a query color.
      *
-     * @tparam T encodes the color space to compute the color euclideanDistanceTo in.
      * @param color a color object to query with, e.g. L*a*b*, XYZ, or RGB.
      * @return an instance of the ColorFrequency class which is nearest match to the query color.
      */
@@ -218,12 +250,10 @@ trait WorkingSpace extends XYZ with RGB with Gamut {
       colorMatch
     }
 
-    override def toString(): String = {
+    override def toString: String = {
       val sb = new StringBuilder(colorFrequencies.length * 30)
       sb.append("ColorPalette(")
-      for (cf <- colorFrequencies) {
-        sb.append(cf).append(" ")
-      }
+      for (cf <- colorFrequencies) sb.append(cf).append(" ")
       sb.append(")")
       sb.toString()
     }

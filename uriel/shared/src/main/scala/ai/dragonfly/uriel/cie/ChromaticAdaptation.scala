@@ -55,6 +55,38 @@ object ChromaticAdaptation {
     0f, 0f, 1.0890636f
   )
 
+  lazy val XYZ_Scaling_Alpha: MatF[4,4] = MatF.identity[4,4]
+  lazy val XYZ_Scaling_Inverse_Alpha: MatF[4,4] = XYZ_Scaling_Alpha
+
+  lazy val Bradford_Alpha: MatF[4,4] = MatF[4,4](
+    0.8951f, 0.2664f, -0.1614f, 0f,
+    -0.7502f, 1.7135f, 0.0367f, 0f,
+    0.0389f, -0.0685f, 1.0296f, 0f,
+    0f, 0f, 0f, 1f
+  )
+
+  lazy val Bradford_Inverse_Alpha: MatF[4,4] = MatF[4,4](
+    0.9869929f, -0.1470543f, 0.1599627f, 0f,
+    0.4323053f, 0.5183603f, 0.0492912f, 0f,
+    -0.0085287f, 0.0400428f, 0.9684867f, 0f,
+    0f, 0f, 0f, 1f
+  )
+
+  lazy val Von_Kries_Alpha: MatF[4,4] = MatF[4,4](
+    0.40024f, 0.7076f, -0.08081f, 0f,
+    -0.2263f, 1.16532f, 0.0457f, 0f,
+    0f, 0f, 0.91822f, 0f,
+    0f, 0f, 0f, 1f
+  )
+
+  lazy val Von_Kries_Inverse_Alpha: MatF[4,4] = MatF[4,4](
+    1.8599364f, -1.1293816f, 0.2198974f, 0f,
+    0.3611914f, 0.6388125f, -0.0000064f, 0f,
+    0f, 0f, 1.0890636f, 0f,
+    0f, 0f, 0f, 1f
+  )
+
+
 }
 
 case class ChromaticAdaptation[S <: WorkingSpace, T <: WorkingSpace](source:S, target:T, m:MatF[3,3] = Bradford) {
@@ -71,6 +103,25 @@ case class ChromaticAdaptation[S <: WorkingSpace, T <: WorkingSpace](source:S, t
     ).times(m)
   )
 
-  def apply(xyz:source.XYZ):target.XYZ = target.XYZ((M * (xyz.asInstanceOf[VecF[3]]).asColumnMatrix).values)
+  def apply(xyz:source.XYZ):target.XYZ = target.XYZ((M * xyz.asInstanceOf[VecF[3]].asColumnMatrix).values)
+
+}
+
+case class ChromaticAdaptationAlpha[S <: WorkingSpace, T <: WorkingSpace](source:S, target:T, m:MatF[4,4] = ChromaticAdaptation.Bradford_Alpha) {
+
+  val s:NArray[Float] = (m * source.illuminant.asColumnMatrixAlpha).values
+
+  val t:NArray[Float] = (m * target.illuminant.asColumnMatrixAlpha).values
+
+  val M:MatF[4,4] = m.inv.times(
+    MatF[4,4](
+      t(0) / s(0), 0f, 0f, 0f,
+      0f, t(1) / s(1), 0f, 0f,
+      0f, 0f, t(2) / s(2), 0f,
+      0f, 0f, 0f, 1f
+    ).times(m)
+  )
+
+  def apply(xyz:source.XYZA):target.XYZA = target.XYZA((M * xyz.asInstanceOf[VecF[4]].asColumnMatrix).values)
 
 }

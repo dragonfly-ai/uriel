@@ -35,7 +35,7 @@ trait ARGB64 extends DiscreteRGB { self: WorkingSpace =>
 
     opaque type ARGB64 = Long
 
-    def apply(argb: Long): ARGB64 = argb.asInstanceOf[ARGB64]
+    def apply(argb: Long): ARGB64 = argb
 
     /**
      * Factory method to create a fully opaque ARGB64 instance from separate, specified red, green, blue components and
@@ -106,11 +106,9 @@ trait ARGB64 extends DiscreteRGB { self: WorkingSpace =>
     inline def clamp(red: Float, green: Float, blue: Float): Long = clamp(MAX.toFloat, red, green, blue)
 
 
-    override def toRGB(c: ARGB64): RGB = c.toRGB
     override def fromRGB(rgb: RGB): ARGB64 = clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX)
 
-    override def toXYZ(c: ARGB64): XYZ = c.toXYZ
-    override def fromXYZ(xyz: XYZ): ARGB64 = fromRGB(xyz.toRGB)
+    override def fromRGBA(rgba: RGBA): ARGB64 = apply(clamp(rgba.alpha, rgba.red * MAX, rgba.green * MAX, rgba.blue * MAX))
 
     override def weightedAverage(c1: ARGB64, w1: Float, c2: ARGB64, w2: Float): ARGB64 = ARGB64(
       ((c1.alpha * w1) + (c2.alpha * w2)).toInt,
@@ -131,6 +129,8 @@ trait ARGB64 extends DiscreteRGB { self: WorkingSpace =>
     override def random(r: scala.util.Random = Random.defaultRandom): ARGB64 = 0xFFFF000000000000L | r.nextLong(0xFFFFFFFFFFFFL)
 
     override def toString:String = "ARGB64"
+
+
   }
 
   type ARGB64 = ARGB64.ARGB64
@@ -172,11 +172,6 @@ trait ARGB64 extends DiscreteRGB { self: WorkingSpace =>
        */
       override inline def blue: Int = (argb & 0xFFFFL).toInt
 
-      override inline def toRGB: RGB = {
-        import ARGB64.MAXD
-        RGB(red.toFloat / MAXD, green.toFloat / MAXD, blue.toFloat / MAXD)
-      }
-
       override def similarity(that: ARGB64): Double = ARGB64.similarity(argb, that)
 
 //      /**
@@ -196,14 +191,44 @@ trait ARGB64 extends DiscreteRGB { self: WorkingSpace =>
        */
       def hex: String = java.lang.Long.toHexString(argb)
 
-      override def render: String = s"ARGB64($alpha, $red, $green, $blue)"
-
-      override def toXYZ: XYZ = toRGB.toXYZ
-
       override def copy: ARGB64 = {
         val l: Long = argb.asInstanceOf[Long]
         l.asInstanceOf[ARGB64]
       }
+
+      override inline def toRGB: RGB = {
+        import ARGB64.MAXF
+        RGB(red.toFloat / MAXF, green.toFloat / MAXF, blue.toFloat / MAXF)
+      }
+
+      override def toRGBA: RGBA = RGBA(
+        alpha.toFloat / ARGB64.MAXF,
+        red.toFloat / ARGB64.MAXF,
+        green.toFloat / ARGB64.MAXF,
+        blue.toFloat / ARGB64.MAXF
+      )
+
+      override def toRGBA(alpha: Float): RGBA = RGBA(
+        alpha,
+        red.toFloat / ARGB64.MAXF,
+        green.toFloat / ARGB64.MAXF,
+        blue.toFloat / ARGB64.MAXF
+      )
+      
+      override def toXYZ: XYZ = toRGB.toXYZ
+
+      override def toXYZA: XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, argb.alpha / ARGB64.MAXF)
+      }
+
+      override def toXYZA(alpha:Float): XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def render: String = s"ARGB64($alpha, $red, $green, $blue)"
+
     }
   }
 }

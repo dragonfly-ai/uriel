@@ -26,7 +26,7 @@ import slash.vectorf.*
 
 trait CMY { self: WorkingSpace =>
 
-  object CMY extends VectorSpace[CMY] {
+  object CMY extends VectorSpace[3, CMY] {
 
     opaque type CMY = VecF[3]
 
@@ -37,7 +37,6 @@ trait CMY { self: WorkingSpace =>
     def apply(values: NArray[Float]): CMY = dimensionCheck(values, 3).asInstanceOf[CMY]
 
     def apply(cyan: Float, magenta: Float, yellow: Float): CMY = apply(NArray[Float](cyan, magenta, yellow))
-
 
     /**
      * Factory method for creating instances of the CMY class.
@@ -71,16 +70,6 @@ trait CMY { self: WorkingSpace =>
 
     override def fromVec(v: VecF[3]): CMY = v.copy
 
-    override def toVec(c: CMY): VecF[3] = c.asInstanceOf[VecF[3]].copy
-
-    override def toRGB(cmy: CMY): RGB = RGB.apply(
-      clamp0to1(
-        1f - cmy.cyan,
-        1f - cmy.magenta,
-        1f - cmy.yellow
-      )
-    )
-
     def fromRGB(rgb: RGB): CMY = apply(
       clamp0to1(
         1f - rgb.red,
@@ -89,9 +78,17 @@ trait CMY { self: WorkingSpace =>
       )
     )
 
-    override def toXYZ(c: CMY): XYZ = c.toXYZ
+    override def fromRGBA(rgba: RGBA): CMY = apply(
+      clamp0to1(
+        1f - rgba.red,
+        1f - rgba.green,
+        1f - rgba.blue
+      )
+    )
 
     override def fromXYZ(xyz: XYZ): CMY = fromRGB(xyz.toRGB)
+
+    override def fromXYZA(xyza: XYZA): CMY = fromRGB(xyza.toRGB)
 
     override def toString:String = "CMY"
   }
@@ -115,7 +112,7 @@ trait CMY { self: WorkingSpace =>
    * }}}
    */
 
-  given VectorColorModel[CMY] with {
+  given VectorColorModel[3, CMY] with {
     extension (cmy: CMY) {
 
       def cyan: Float = CMY.cyan(cmy)
@@ -124,15 +121,44 @@ trait CMY { self: WorkingSpace =>
 
       def yellow: Float = CMY.yellow(cmy)
 
+      override def similarity(that: CMY): Double = CMY.similarity(cmy, that)
+
+      override def vec: VecF[3] = cmy.asInstanceOf[VecF[3]].copy
+
+      override def copy: CMY = cmy.asInstanceOf[VecF[3]].copy.asInstanceOf[CMY]
+
+      override def toRGB: RGB = RGB.apply(
+        clamp0to1(
+          1f - cmy.cyan,
+          1f - cmy.magenta,
+          1f - cmy.yellow
+        )
+      )
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, 1f)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
       override def toXYZ: XYZ = toRGB.toXYZ
 
-      override def toRGB: RGB = CMY.toRGB(cmy)
+      override def toXYZA: XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, 1f)
+      }
 
-      override def similarity(that: CMY): Double = CMY.similarity(cmy, that)
+      override def toXYZA(alpha:Float): XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
 
       override def render: String = s"CMY($cyan, $magenta, $yellow)"
 
-      override def copy: CMY = cmy.asInstanceOf[VecF[3]].copy.asInstanceOf[CMY]
     }
   }
 

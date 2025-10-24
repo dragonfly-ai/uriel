@@ -26,7 +26,7 @@ import slash.vectorf.*
 
 trait CMYK { self: WorkingSpace =>
 
-  object CMYK extends VectorSpace[CMYK] {
+  object CMYK extends VectorSpace[4, CMYK] {
 
     opaque type CMYK = VecF[4]
 
@@ -81,24 +81,6 @@ trait CMYK { self: WorkingSpace =>
       r.nextFloat()
     )
 
-
-    override def toRGB(c: CMYK): RGB = c.toRGB
-    def fromRGB(rgb: RGB): CMYK = {
-      // http://color.lukas-stratmann.com/color-systems/cmy.html
-      val k:Float = (1f - Math.max(rgb.red, Math.max(rgb.green, rgb.blue))).toFloat
-      apply(
-        clamp0to1(
-          (1f - rgb.red) - k,
-          (1f - rgb.green) - k,
-          (1f - rgb.blue) - k,
-          k
-        )
-      )
-    }
-
-    override def fromXYZ(xyz: XYZ): CMYK = fromRGB(xyz.toRGB)
-    override def toXYZ(c: CMYK): XYZ = c.toXYZ
-    
     def cyan(cmyk: CMYK): Float = cmyk(0)
 
     def magenta(cmyk: CMYK): Float = cmyk(1)
@@ -109,17 +91,42 @@ trait CMYK { self: WorkingSpace =>
 
     def black(cmyk: CMYK): Float = cmyk(3)
 
-    override def toVec(c: CMYK): VecF[3] = VecF[3](
-      c.cyan + c.key,
-      c.yellow + c.key,
-      c.magenta + c.key
-    )
-
     override def euclideanDistanceSquaredTo(cmyk1: CMYK, cmyk2: CMYK): Double = cmyk1.euclideanDistanceSquaredTo(cmyk2)
 
-    override def fromVec(v: VecF[3]): CMYK = apply(v.x, v.y, v.z)
+//    override def toVec(c: CMYK): VecF[3] = VecF[3](
+//      c.cyan + c.key,
+//      c.yellow + c.key,
+//      c.magenta + c.key
+//    )
+
+    override def fromVec(v: VecF[4]): CMYK = apply(v.x, v.y, v.z, v.w)
+
+    def fromRGB(rgb: RGB): CMYK = {
+      // http://color.lukas-stratmann.com/color-systems/cmy.html
+      val k: Float = (1f - Math.max(rgb.red, Math.max(rgb.green, rgb.blue)))
+      apply(
+        clamp0to1(
+          (1f - rgb.red) - k,
+          (1f - rgb.green) - k,
+          (1f - rgb.blue) - k,
+          k
+        )
+      )
+    }
+
+    override def fromRGBA(rgba: RGBA): CMYK = fromRGB(RGB(rgba.red, rgba.green, rgba.blue))
+
+    override def fromXYZ(xyz: XYZ): CMYK = fromRGB(xyz.toRGB)
+
+    override def fromXYZA(xyza: XYZA): CMYK = fromXYZ(XYZ(xyza.x, xyza.y, xyza.z))
 
     override def toString:String = "CMYK"
+
+//    override def vecTo_sRGB_ARGB(v: VecF[4]): ARGB32 = {
+//      Gamut.XYZtoARGB32(
+//        fromVec(v).toXYZ.asInstanceOf[VecF[3]]
+//      ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+//    }
   }
 
   /**
@@ -142,7 +149,7 @@ trait CMYK { self: WorkingSpace =>
 
   type CMYK = CMYK.CMYK
 
-  given VectorColorModel[CMYK] with {
+  given VectorColorModel[4, CMYK] with {
     extension (cmyk: CMYK) {
 
       def cyan: Float = CMYK.cyan(cmyk)
@@ -155,7 +162,14 @@ trait CMYK { self: WorkingSpace =>
 
       def black: Float = CMYK.black(cmyk)
 
-      override def toXYZ: XYZ = toRGB.toXYZ
+      override def copy: CMYK = NArray[Float](cyan, magenta, yellow, key).asInstanceOf[CMYK]
+
+      override def vec: VecF[4] = VecF[4](
+        cmyk.cyan,
+        cmyk.yellow,
+        cmyk.magenta,
+        cmyk.key
+      )
 
       override def toRGB: RGB = {
         // http://color.lukas-stratmann.com/color-systems/cmy.html
@@ -174,11 +188,33 @@ trait CMYK { self: WorkingSpace =>
         //        )
         //      )
       }
+
+      override def toRGBA: RGBA = {
+        val rgb:RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, 1f)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb:RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toXYZ: XYZ = toRGB.toXYZ
+
+      override def toXYZA: XYZA = {
+        val xyz:XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, 1f)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz:XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
       override def similarity(that: CMYK): Double = CMYK.similarity(cmyk, that)
 
       override def render: String = s"CMYK($cyan, $magenta, $yellow, $key)"
 
-      override def copy: CMYK = NArray[Float](cyan, magenta, yellow, key).asInstanceOf[CMYK]
     }
   }
 }

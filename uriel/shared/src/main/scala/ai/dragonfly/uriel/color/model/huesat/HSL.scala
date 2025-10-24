@@ -23,11 +23,12 @@ import ai.dragonfly.uriel.color.model.*
 import ai.dragonfly.mesh
 import ai.dragonfly.mesh.shape.*
 import slash.*
+import slash.Constant.π
 import slash.vectorf.*
 
 trait HSL extends HueSaturation { self: WorkingSpace =>
 
-  object HSL extends HueSaturationSpace[HSL] {
+  object HSL extends HueSaturationSpace[3, HSL] {
 
     opaque type HSL = VecF[3]
 
@@ -90,17 +91,27 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
       )
     )
 
-    override def toVec(hsl: HSL): VecF[3] = VecF[3](
-      (hsl(1) * Math.cos(slash.degreesToRadians(hsl(0)))).toFloat,
-      (hsl(1) * Math.sin(slash.degreesToRadians(hsl(0)))).toFloat,
-      hsl(2)
-    )
+//    override def toVec(hsl: HSL): VecF[3] = VecF[3](
+//      (hsl(1) * Math.cos(slash.degreesToRadians(hsl(0)))).toFloat,
+//      (hsl(1) * Math.sin(slash.degreesToRadians(hsl(0)))).toFloat,
+//      hsl(2)
+//    )
 
     def hue(hsl: HSL): Float = hsl(0)
 
     def saturation(hsl: HSL): Float = hsl(1)
 
     def lightness(hsl: HSL): Float = hsl(2)
+
+    override def fromVec(v: VecF[3]): HSL = {
+      val r: Float = Math.sqrt(squareInPlace(v.x) + squareInPlace(v.y)).toFloat
+      val theta: Float = (π + Math.atan2(v.y, v.x)).toFloat
+      apply(
+        radiansToDegrees(theta).toFloat,
+        r,
+        v.z
+      )
+    }
 
     def fromRGB(rgb: RGB): HSL = {
       val values: NArray[Float] = hueMinMax(rgb.red, rgb.green, rgb.blue)
@@ -115,27 +126,22 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
       )
     }
 
-    override def toRGB(hsl: HSL): RGB = {
-      // https://www.rapidtables.com/convert/color/hsl-to-rgb.html
-      val C: Float = (1f - Math.abs((2f * hsl.lightness) - 1f)) * hsl.saturation
-      RGB.apply(
-        HSL.hcxmToRGBvalues(
-          hsl.hue,
-          C,
-          HSL.XfromHueC(hsl.hue, C), // X
-          hsl.lightness - (0.5f * C) // m
-        )
-      )
-    }
+    override def fromRGBA(rgba: RGBA): HSL = fromRGB(rgba.toRGB)
 
-    override def toXYZ(c: HSL): XYZ = c.toXYZ
+    override def fromXYZA(xyza: XYZA): HSL = fromXYZ(xyza.toXYZ)
+
+//    override def vecTo_sRGB_ARGB(v: VecF[3]): ai.dragonfly.mesh.sRGB.ARGB32 = {
+//      Gamut.XYZtoARGB32(
+//        fromVec(v).toXYZ.asInstanceOf[VecF[3]]
+//      ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+//    }
 
     override def toString:String = "HSL"
   }
 
   type HSL = HSL.HSL
 
-  given CylindricalColorModel[HSL] with {
+  given CylindricalColorModel[3, HSL] with {
     extension (hsl: HSL) {
       inline def hue: Float = HSL.hue(hsl)
 
@@ -147,7 +153,30 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
 
       override def copy: HSL = NArray[Float](hue, saturation, lightness).asInstanceOf[HSL]
 
-      def toRGB: RGB = HSL.toRGB(hsl)
+      override def vec: VecF[3] = VecF[3](
+        (saturation * Math.cos(slash.degreesToRadians(hue))).toFloat,
+        (saturation * Math.sin(slash.degreesToRadians(hue))).toFloat,
+        lightness
+      )
+
+//      override def toVec: VecF[3] = VecF[3](
+//        (hsl(1) * Math.cos(slash.degreesToRadians(hsl(0)))).toFloat,
+//        (hsl(1) * Math.sin(slash.degreesToRadians(hsl(0)))).toFloat,
+//        hsl(2)
+//      )
+
+      override def toRGB: RGB = {
+        // https://www.rapidtables.com/convert/color/hsl-to-rgb.html
+        val C: Float = (1f - Math.abs((2f * hsl.lightness) - 1f)) * hsl.saturation
+        RGB.apply(
+          HSL.hcxmToRGBvalues(
+            hsl.hue,
+            C,
+            HSL.XfromHueC(hsl.hue, C), // X
+            hsl.lightness - (0.5f * C) // m
+          )
+        )
+      }
 
       override def toXYZ: XYZ = toRGB.toXYZ
 
@@ -161,6 +190,27 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
        * }}}
        */
       def svg(): String = s"hsl(${f"$hue%1.3f"}, ${f"$saturation%1.1f"}%, ${f"$lightness%1.1f"}%)"
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, 1f)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toXYZA: XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, 1f)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
     }
   }
 }

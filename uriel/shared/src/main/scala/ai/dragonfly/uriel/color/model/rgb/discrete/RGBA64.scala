@@ -36,7 +36,7 @@ trait RGBA64 extends DiscreteRGB { self: WorkingSpace =>
 
     opaque type RGBA64 = Long
 
-    def apply(rgba: Long): RGBA64 = rgba.asInstanceOf[RGBA64]
+    def apply(rgba: Long): RGBA64 = rgba
 
     /**
      * Factory method to create a fully opaque RGBA64 instance from separate, specified red, green, blue components and
@@ -106,9 +106,9 @@ trait RGBA64 extends DiscreteRGB { self: WorkingSpace =>
 
     inline def clamp(red: Float, green: Float, blue: Float): Long = clamp(red, green, blue, MAX.toFloat)
 
-    override def fromXYZ(xyz: XYZ): RGBA64 = fromRGB(xyz.toRGB)
+    override def fromRGB(rgb: RGB): RGBA64 = clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX)
 
-    def fromRGB(rgb: RGB): RGBA64 = clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX)
+    override def fromRGBA(rgba: RGBA): RGBA64 = apply(clamp(rgba.alpha * MAX, rgba.red * MAX, rgba.green * MAX, rgba.blue * MAX))
 
     override def weightedAverage(c1: RGBA64, w1: Float, c2: RGBA64, w2: Float): RGBA64 = RGBA64(
       ((c1.red * w1) + (c2.red * w2)).toInt,
@@ -127,10 +127,6 @@ trait RGBA64 extends DiscreteRGB { self: WorkingSpace =>
      * @return a randomly generated color sampled from the RGB Color ColorSpace.
      */
     override def random(r: scala.util.Random = Random.defaultRandom): RGBA64 = RGBA64((r.nextLong(0xFFFFFFFFFFFFL)<< 16) | 0xFFFFL)
-
-    override def toRGB(c: RGBA64): RGB = c.toRGB
-
-    override def toXYZ(c: RGBA64): XYZ = c.toXYZ
 
     override def toString:String = "RGBA64"
 
@@ -177,13 +173,10 @@ trait RGBA64 extends DiscreteRGB { self: WorkingSpace =>
        */
       inline def alpha: Int = (rgba & 0xFFFFL).toInt
 
-      override def toRGB: RGB = {
-        import RGBA64.MAXD
-        RGB(
-          (red / MAXD).toFloat,
-          (green / MAXD).toFloat,
-          (blue / MAXD).toFloat
-        )
+
+      override def copy: RGBA64 = {
+        val l: Long = rgba.asInstanceOf[Long]
+        l.asInstanceOf[RGBA64]
       }
 
       override def similarity(that: RGBA64): Double = RGBA64.similarity(rgba, that)
@@ -205,14 +198,43 @@ trait RGBA64 extends DiscreteRGB { self: WorkingSpace =>
        */
       def hex: String = java.lang.Long.toHexString(rgba)
 
-      override def render: String = s"RGBA64($red, $green, $blue, $alpha)"
+
+      override def toRGB: RGB = {
+        import RGBA64.MAXF
+        RGB(
+          red / MAXF,
+          green / MAXF,
+          blue / MAXF
+        )
+      }
+
+      override def toRGBA: RGBA = RGBA(
+        red.toFloat / RGBA64.MAXF,
+        green.toFloat / RGBA64.MAXF,
+        blue.toFloat / RGBA64.MAXF,
+        alpha.toFloat / RGBA64.MAXF
+      )
+
+      override def toRGBA(alpha: Float): RGBA = RGBA(
+        red.toFloat / RGBA64.MAXF,
+        green.toFloat / RGBA64.MAXF,
+        blue.toFloat / RGBA64.MAXF,
+        alpha
+      )
 
       override def toXYZ: XYZ = toRGB.toXYZ
 
-      override def copy: RGBA64 = {
-        val l: Long = rgba.asInstanceOf[Long]
-        l.asInstanceOf[RGBA64]
+      override def toXYZA: XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, rgba.alpha / RGBA64.MAXF)
       }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def render: String = s"RGBA64($red, $green, $blue, $alpha)"
 
     }
   }

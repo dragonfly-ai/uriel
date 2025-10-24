@@ -37,9 +37,9 @@ trait DiscreteRGB {
   trait UtilDiscreteRGB[C:DiscreteRGB] extends DiscreteSpace[C] {
     val min: Int = 0
     val MAX: Int
-    lazy val MAXD: Float = MAX.toFloat
+    lazy val MAXF: Float = MAX.toFloat
 
-    override lazy val maxDistanceSquared: Double = 3.0 * squareInPlace(MAXD)
+    override lazy val maxDistanceSquared: Double = 3.0 * squareInPlace(MAXF)
 
     override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = squareInPlace(c1.red - c2.red) + squareInPlace(c1.green - c2.green) + squareInPlace(c1.blue - c2.blue)
 
@@ -48,7 +48,6 @@ trait DiscreteRGB {
     inline def valid(i0: Int, i1: Int, i2: Int): Boolean = valid(i0) && valid(i1) && valid(i2)
 
     inline def valid(i0: Int, i1: Int, i2: Int, i3: Int): Boolean = valid(i0) && valid(i1) && valid(i2) && valid(i3)
-
 
     /**
      * Generate an C instance from a single value, skipping all overhead and validation.  Not suited for intensity data
@@ -70,13 +69,16 @@ trait DiscreteRGB {
 
     def apply(c1: Int, c2: Int, c3: Int, c4: Int): C
 
+    override def fromXYZ(xyz: XYZ): C = fromRGB(xyz.toRGB)
+
+    override def fromXYZA(xyza: XYZA): C = fromRGBA(xyza.toRGBA)
   }
 
 
   trait UtilRGB32[C: DiscreteRGB] extends UtilDiscreteRGB[C] {
     override val MAX: Int = 255
 
-    inline def clamp(intensity: Float): Int = Math.round(Math.max(0f, Math.min(MAX.toFloat, intensity))).toInt
+    inline def clamp(intensity: Float): Int = Math.round(Math.max(0f, Math.min(MAX.toFloat, intensity)))
 
     inline def clamp(c4: Float, c3: Float, c2: Float, c1: Float): Int = {
       (clamp(c4) << 24) | (clamp(c3) << 16) | (clamp(c2) << 8) | clamp(c1)

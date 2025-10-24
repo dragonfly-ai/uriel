@@ -20,14 +20,11 @@ import narr.*
 import ai.dragonfly.uriel.*
 import ai.dragonfly.uriel.cie.WorkingSpace
 
-import slash.{radiansToDegrees, squareInPlace}
-import slash.Constant.π
-
 import slash.vectorf.*
 
 trait HueSaturation { self: WorkingSpace =>
 
-  trait HueSaturationSpace[C: CylindricalColorModel] extends CylindricalSpace[C] {
+  trait HueSaturationSpace[N <: Int, C: CylindricalColorModel[N, _]] extends CylindricalSpace[N, C] {
 
     def apply(h: Float, s: Float, lv: Float): C
 
@@ -56,23 +53,23 @@ trait HueSaturation { self: WorkingSpace =>
       )
     }
 
-    override def fromVec(v:VecF[3]): C = {
-      val r:Float = Math.sqrt(squareInPlace(v.x) + squareInPlace(v.y)).toFloat
-      val θ:Float = (π + Math.atan2(v.y, v.x)).toFloat
-      apply(
-        radiansToDegrees(θ).toFloat,
-        r,
-        v.z
-      )
-    }
+//    override def fromVec(v:VecF[N]): C = {
+//      val r:Float = Math.sqrt(squareInPlace(v.x) + squareInPlace(v.y)).toFloat
+//      val θ:Float = (π + Math.atan2(v.y, v.x)).toFloat
+//      apply(
+//        radiansToDegrees(θ).toFloat,
+//        r,
+//        v.z
+//      )
+//    }
 
     override val maxDistanceSquared: Double = 6.0
 
-    override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = toVec(c1).euclideanDistanceSquaredTo(toVec(c2)).toFloat
+    override def euclideanDistanceSquaredTo(c1: C, c2: C): Double = c1.vec.euclideanDistanceSquaredTo(c2.vec)
 
-    override def weightedAverage(c1: C, w1: Float, c2: C, w2: Float): C = fromVec(
-      (toVec(c1) * w1) + (toVec(c2) * w2)
-    )
+//    override def weightedAverage(c1: C, w1: Float, c2: C, w2: Float): C = fromVec(
+//      (toVec(c1) * w1) + (toVec(c2) * w2)
+//    )
 
     inline def hcxmToRGBvalues(hue: Float, c: Float, x: Float, m: Float): NArray[Float] = {
       val X = x + m

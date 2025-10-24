@@ -17,11 +17,12 @@
 package ai.dragonfly.uriel.color.model.perceptual
 
 import narr.*
-
 import ai.dragonfly.uriel.cie.*
 import ai.dragonfly.uriel.cie.Constant.*
 import slash.*
 import slash.vectorf.*
+
+import scala.util.Random
 
 trait Luv { self: WorkingSpace =>
 
@@ -51,17 +52,19 @@ trait Luv { self: WorkingSpace =>
     }
   }
 
-  object Luv extends PerceptualSpace[Luv] {
+  object Luv extends PerceptualSpace[3, Luv] {
 
     opaque type Luv = VecF[3]
 
     override lazy val fullGamut: Gamut = Gamut.fromSpectralSamples(
       cmf,
-      (v: VecF[3]) => toVec(fromXYZ(XYZ(whitePoint.x * v.x, whitePoint.y * v.y, whitePoint.z * v.z)))
+      (v: VecF[3]) => fromXYZ(XYZ(whitePoint.x * v.x, whitePoint.y * v.y, whitePoint.z * v.z)).vec
     )
 
-    override lazy val usableGamut: Gamut = Gamut.fromRGB(32, (xyz: XYZ) => toVec(fromXYZ(xyz)))
-    
+    override lazy val usableGamut: Gamut = Gamut.fromRGB(32, (xyz: XYZ) => fromXYZ(xyz).vec)
+
+    override def maxDistanceSquared: Double = usableGamut.maxDistSquared
+
     def apply(values: NArray[Float]): Luv = dimensionCheck(values, 3).asInstanceOf[Luv]
 
     /**
@@ -77,13 +80,32 @@ trait Luv { self: WorkingSpace =>
 
     // XYZ to LUV and helpers:
 
-    val UV(uₙ: Double, vₙ: Double) = UV.fromXYZ(XYZ(illuminant.whitePointValues))
+    val UV(uN: Double, vN: Double) = UV.fromXYZ(XYZ(illuminant.whitePointValues))
 
     def fL(t: Double): Double = if (t > ϵ) 116.0 * Math.cbrt(t) - 16.0 else k * t
 
-    override def toRGB(c: Luv): RGB = c.toRGB
+//    override def toRGB(c: Luv): RGB = c.toRGB
+//
+//    override def toXYZ(c: Luv): XYZ = c.toXYZ
 
-    override def toXYZ(c: Luv): XYZ = c.toXYZ
+    // LUV to XYZ and helpers:
+    def flInverse(t: Float): Double = if (t > kϵ) {
+      cubeInPlace(`1/116` * (t + 16.0)) //`1/116³` * cubeInPlace(t + 16f) // ((L+16)/116)^3 = (L + 16)^3 / 116^3 = (L + 16)^3 / 1560896f
+    } else `1/k` * t
+
+    def L(luv: Luv): Float = luv(2)
+
+    def u(luv: Luv): Float = luv(0)
+
+    def v(luv: Luv): Float = luv(1)
+
+    override def random(r: Random): Luv = usableGamut.random(r)
+
+    override def fromVec(v: VecF[3]): Luv = v
+
+    override def fromRGBA(rgba: RGBA): Luv = fromXYZ(rgba.toXYZ)
+
+    override def fromXYZA(xyza: XYZA): Luv = fromXYZ(xyza.toXYZ)
 
     def fromXYZ(xyz: XYZ): Luv = {
 
@@ -93,8 +115,8 @@ trait Luv { self: WorkingSpace =>
 
       val uv: UV = UV.fromXYZ(xyz)
 
-      val `u⭑`:Double = 13.0 * `L⭑` * (uv.u - uₙ)
-      val `v⭑`:Double = 13.0 * `L⭑` * (uv.v - vₙ)
+      val `u⭑`:Double = 13.0 * `L⭑` * (uv.u - uN)
+      val `v⭑`:Double = 13.0 * `L⭑` * (uv.v - vN)
 
       apply(
         `L⭑`.toFloat,
@@ -103,17 +125,10 @@ trait Luv { self: WorkingSpace =>
       )
     }
 
-    def L(luv: Luv): Float = luv(2)
-
-    def u(luv: Luv): Float = luv(0)
-
-    def v(luv: Luv): Float = luv(1)
-
-    override def fromVec(v: VecF[3]): Luv = v
-
-    override def toVec(luv: Luv): VecF[3] = luv.asInstanceOf[VecF[3]].copy
+//    override def toVec(luv: Luv): VecF[3] = luv.asInstanceOf[VecF[3]].copy
 
     override def toString:String = "Luv"
+
   }
 
   /**
@@ -124,7 +139,7 @@ trait Luv { self: WorkingSpace =>
 
   type Luv = Luv.Luv
 
-  given PerceptualColorModel[Luv] with {
+  given PerceptualColorModel[3, Luv] with {
     extension (luv: Luv) {
 
       inline def L: Float = Luv.L(luv)
@@ -133,31 +148,46 @@ trait Luv { self: WorkingSpace =>
 
       inline def v: Float = Luv.v(luv)
 
-      override def render: String = s"L⭑u⭑v⭑($L,$u,$v)"
-
       override def copy: Luv = Luv(u, v, L)
 
-      // LUV to XYZ and helpers:
-      def flInverse(t: Float): Double = if (t > kϵ) {
-        cubeInPlace(`1/116` * (t + 16.0)) //`1/116³` * cubeInPlace(t + 16f) // ((L+16)/116)^3 = (L + 16)^3 / 116^3 = (L + 16)^3 / 1560896f
-      } else `1/k` * t
+      override def vec: VecF[3] = luv.asInstanceOf[VecF[3]].copy
+
+      override def similarity(that: Luv): Double = Luv.similarity(luv, that)
+
+      override def toRGB: RGB = toXYZ.toRGB
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, 1f)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
 
       def toXYZ: XYZ = {
+        val uX: Double = (u / (13.0 * L)) + Luv.uN
+        val vX: Double = (v / (13.0 * L)) + Luv.vN
 
-        val uₓ: Double = (u / (13.0 * L)) + Luv.uₙ
-        val vₓ: Double = (v / (13.0 * L)) + Luv.vₙ
-
-        val Y: Double = flInverse(L)
-        val X: Double = 9.0 * Y * uₓ / (4.0 * vₓ)
-        val Z: Double = (3.0 * Y / vₓ) - (5.0 * Y) - (X / 3.0)
+        val Y: Double = Luv.flInverse(L)
+        val X: Double = 9.0 * Y * uX / (4.0 * vX)
+        val Z: Double = (3.0 * Y / vX) - (5.0 * Y) - (X / 3.0)
 
         XYZ(X.toFloat, Y.toFloat, Z.toFloat)
       }
 
-      override def toRGB: RGB = toXYZ.toRGB
+      override def toXYZA: XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, 1f)
+      }
 
-      override def similarity(that: Luv): Double = Luv.similarity(luv, that)
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
 
+      override def render: String = s"L⭑u⭑v⭑($L,$u,$v)"
     }
   }
 

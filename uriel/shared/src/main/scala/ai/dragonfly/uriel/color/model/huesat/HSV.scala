@@ -23,11 +23,12 @@ import ai.dragonfly.uriel.color.model.*
 import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
 import slash.*
+import slash.Constant.π
 import slash.vectorf.*
 
 trait HSV extends HueSaturation { self: WorkingSpace =>
 
-  object HSV extends HueSaturationSpace[HSV] {
+  object HSV extends HueSaturationSpace[3, HSV] {
 
     opaque type HSV = VecF[3]
 
@@ -99,19 +100,19 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
       values.asInstanceOf[HSV]
     }
 
-    override def toRGB(hsv: HSV): RGB = {
-      // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
-      val C = hsv.value * hsv.saturation
-      HSV.hcxmToRGBvalues(hsv.hue, C, HSV.XfromHueC(hsv.hue, C), hsv.value - C).asInstanceOf[RGB]
-    }
+//    override def toRGB(hsv: HSV): RGB = {
+//      // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
+//      val C = hsv.value * hsv.saturation
+//      HSV.hcxmToRGBvalues(hsv.hue, C, HSV.XfromHueC(hsv.hue, C), hsv.value - C).asInstanceOf[RGB]
+//    }
 
-    override def toXYZ(c: HSV): XYZ = c.toXYZ
+//    override def toXYZ(c: HSV): XYZ = c.toXYZ
 
-    override def toVec(hsv: HSV): VecF[3] = VecF[3](
-      (hsv(1) * Math.cos(slash.degreesToRadians(hsv(0)))).toFloat,
-      (hsv(1) * Math.sin(slash.degreesToRadians(hsv(0)))).toFloat,
-      hsv(2)
-    )
+//    override def toVec(hsv: HSV): VecF[3] = VecF[3](
+//      (hsv(1) * Math.cos(slash.degreesToRadians(hsv(0)))).toFloat,
+//      (hsv(1) * Math.sin(slash.degreesToRadians(hsv(0)))).toFloat,
+//      hsv(2)
+//    )
 
     def hue(hsv: HSV): Float = hsv(0)
 
@@ -120,11 +121,31 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
     def value(hsv: HSV): Float = hsv(2)
 
     override def toString:String = "HSV"
+
+    override def fromVec(v: VecF[3]): HSV = {
+      val r: Float = Math.sqrt(squareInPlace(v.x) + squareInPlace(v.y)).toFloat
+      val theta: Float = (π + Math.atan2(v.y, v.x)).toFloat
+      apply(
+        radiansToDegrees(theta).toFloat,
+        r,
+        v.z
+      )
+    }
+
+//    override def vecTo_sRGB_ARGB(v: VecF[3]): ai.dragonfly.mesh.sRGB.ARGB32 = {
+//      Gamut.XYZtoARGB32(
+//        fromVec(v).toXYZ.asInstanceOf[VecF[3]]
+//      ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+//    }
+
+    override def fromRGBA(rgba: RGBA): HSV = fromRGB(rgba.toRGB)
+
+    override def fromXYZA(xyza: XYZA): HSV = fromXYZ(xyza.toXYZ)
   }
 
   type HSV = HSV.HSV
 
-  given CylindricalColorModel[HSV] with {
+  given CylindricalColorModel[3, HSV] with {
     extension (hsv: HSV) {
 
       //case class HSV private(override val values: NArray[Float]) extends HueSaturation[HSV] {
@@ -135,16 +156,46 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
 
       inline def value: Float = HSV.value(hsv)
 
-      // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
-      def toRGB: RGB = HSV.toRGB(hsv)
-
       override def copy: HSV = NArray[Float](hue, saturation, value).asInstanceOf[HSV]
 
       override def similarity(that: HSV): Double = HSV.similarity(hsv, that)
 
       override def render: String = s"HSV($hue, $saturation, $value)"
 
+      override def vec: VecF[3] = VecF[3](
+        (saturation * Math.cos(slash.degreesToRadians(hue))).toFloat,
+        (saturation * Math.sin(slash.degreesToRadians(hue))).toFloat,
+        value
+      )
+
+      def toRGB: RGB = {
+        // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
+        val C = value * saturation
+        HSV.hcxmToRGBvalues(hue, C, HSV.XfromHueC(hsv.hue, C), value - C).asInstanceOf[RGB]
+      }
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, 1f)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
       override def toXYZ: XYZ = toRGB.toXYZ
+
+      override def toXYZA: XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, 1f)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
     }
 
   }

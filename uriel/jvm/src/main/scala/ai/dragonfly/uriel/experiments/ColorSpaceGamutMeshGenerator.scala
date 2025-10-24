@@ -46,7 +46,7 @@ object ColorSpaceGamutMeshGenerator extends App {
     writeMesh(LRGB.usableGamut, "LRGB_Usable", (cv:VecF[3]) => ARGB32.fromRGB(LRGB.fromVec(cv).toRGB).asInstanceOf[sRGB.ARGB32])
 
     writeMesh(CMY.usableGamut, "CMY_Usable", (cv:VecF[3]) => ARGB32.fromRGB(CMY.fromVec(cv).toRGB).asInstanceOf[sRGB.ARGB32])
-    writeMesh(CMYK.usableGamut, "CMYK_Usable", (cv:VecF[3]) => ARGB32.fromRGB(CMYK.fromVec(cv).toRGB).asInstanceOf[sRGB.ARGB32])
+    //writeMesh(CMYK.usableGamut, "CMYK_Usable", (cv:VecF[4]) => ARGB32.fromRGB(CMYK.fromVec(cv).toRGB).asInstanceOf[sRGB.ARGB32])
 
     writeMesh(HSL.usableGamut, "HSL_Usable", (cv:VecF[3]) => ARGB32.fromRGB(HSL.fromVec(cv).toRGB).asInstanceOf[sRGB.ARGB32])
     writeMesh(HSV.usableGamut, "HSV_Usable", (cv:VecF[3]) => ARGB32.fromRGB(HSV.fromVec(cv).toRGB).asInstanceOf[sRGB.ARGB32])
@@ -54,11 +54,11 @@ object ColorSpaceGamutMeshGenerator extends App {
     writeMesh(XYZ.fullGamut, "XYZ_Full", (cv:VecF[3]) => Gamut.XYZtoARGB32(cv).asInstanceOf[sRGB.ARGB32])
     writeMesh(XYZ.usableGamut, "XYZ_Usable", (cv:VecF[3]) => Gamut.XYZtoARGB32(cv).asInstanceOf[sRGB.ARGB32])
 
-    writeMesh(Lab.fullGamut, "Lab_Full", (cv:VecF[3]) => Gamut.XYZtoARGB32(Lab.toXYZ(Lab.fromVec(cv)).asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
-    writeMesh(Lab.usableGamut, "Lab_Usable", (cv:VecF[3]) => Gamut.XYZtoARGB32(Lab.toXYZ(Lab.fromVec(cv)).asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
+    writeMesh(Lab.fullGamut, "Lab_Full", (cv:VecF[3]) => Gamut.XYZtoARGB32(Lab.fromVec(cv).toXYZ.asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
+    writeMesh(Lab.usableGamut, "Lab_Usable", (cv:VecF[3]) => Gamut.XYZtoARGB32(Lab.fromVec(cv).toXYZ.asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
 
-    writeMesh(Luv.fullGamut, "Luv_Full", (cv:VecF[3]) => Gamut.XYZtoARGB32(Luv.toXYZ(Luv.fromVec(cv)).asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
-    writeMesh(Luv.usableGamut, "Luv_Usable", (cv:VecF[3]) => Gamut.XYZtoARGB32(Luv.toXYZ(Luv.fromVec(cv)).asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
+    writeMesh(Luv.fullGamut, "Luv_Full", (cv:VecF[3]) => Gamut.XYZtoARGB32(Luv.fromVec(cv).toXYZ.asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
+    writeMesh(Luv.usableGamut, "Luv_Usable", (cv:VecF[3]) => Gamut.XYZtoARGB32(Luv.fromVec(cv).toXYZ.asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
 
   }
 
