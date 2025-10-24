@@ -18,7 +18,6 @@ package ai.dragonfly.uriel.color.model.subtractive
 
 import narr.*
 import ai.dragonfly.uriel.cie.WorkingSpace
-import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
 import ai.dragonfly.uriel.*
 import slash.*

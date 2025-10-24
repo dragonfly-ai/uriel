@@ -20,13 +20,13 @@ import narr.*
 import slash.*
 import slash.vectorf.*
 import matrixf.*
-import ai.dragonfly.uriel.color.model.*
+
 import ai.dragonfly.uriel.color.model.perceptual.XYZ
 import ai.dragonfly.uriel.color.model.rgb.RGB
 import ai.dragonfly.uriel.color.spectral.*
 import slash.stats.probability.distributions.Sampleable
 
-import scala.collection.{immutable, mutable}
+import scala.collection.immutable
 
 trait WorkingSpace extends RGB with XYZ with Gamut {
 
@@ -72,15 +72,15 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
     }
   }
 
-  trait VectorColorModel[N <: Int, C](using ValueOf[N]) extends ColorModel[C] {
+  trait VectorColorModel[N <: Int, C] extends ColorModel[C] {
     extension (c:C) def vec: VecF[N] = c.asInstanceOf[VecF[N]]
   }
 
   trait DiscreteColorModel[C] extends ColorModel[C]
 
-  trait CylindricalColorModel[N <: Int, C](using ValueOf[N]) extends VectorColorModel[N, C]
+  trait CylindricalColorModel[N <: Int, C] extends VectorColorModel[N, C]
 
-  trait HueSaturationModel[N <: Int, C](using ValueOf[N]) extends CylindricalColorModel[N, C] {
+  trait HueSaturationModel[N <: Int, C] extends CylindricalColorModel[N, C] {
     extension (c: C) {
       def hue: Float
       def saturation: Float
@@ -88,7 +88,7 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
     }
   }
 
-  trait PerceptualColorModel[N <: Int, C](using ValueOf[N]) extends VectorColorModel[N, C]
+  trait PerceptualColorModel[N <: Int, C] extends VectorColorModel[N, C]
 
   /**
    * ColorSpace traits for companion objects of Color Models.
@@ -145,7 +145,7 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
 
   }
 
-  trait VectorSpace[N <: Int, C: VectorColorModel[N, _]](using ValueOf[N]) extends ColorSpace[C] {
+  trait VectorSpace[N <: Int, C: VectorColorModel[N, _]] extends ColorSpace[C] {
 
     def usableGamut:Gamut
 
@@ -176,11 +176,11 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
 //    }
   }
 
-  trait CylindricalSpace[N <: Int, C: CylindricalColorModel[N, _]](using ValueOf[N]) extends VectorSpace[N, C] {
+  trait CylindricalSpace[N <: Int, C: CylindricalColorModel[N, _]] extends VectorSpace[N, C] {
 
   }
 
-  trait PerceptualSpace[N <: Int, C: PerceptualColorModel[N, _]](using ValueOf[N]) extends VectorSpace[N, C] {
+  trait PerceptualSpace[N <: Int, C: PerceptualColorModel[N, _]] extends VectorSpace[N, C] {
 
     def apply(c1: Float, c2: Float, c3: Float): C
 

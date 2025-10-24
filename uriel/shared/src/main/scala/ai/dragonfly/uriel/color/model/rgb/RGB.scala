@@ -19,7 +19,6 @@ package ai.dragonfly.uriel.color.model.rgb
 import narr.*
 import ai.dragonfly.uriel.*
 import ai.dragonfly.uriel.cie.*
-import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
 import slash.*
 import slash.matrixf.*

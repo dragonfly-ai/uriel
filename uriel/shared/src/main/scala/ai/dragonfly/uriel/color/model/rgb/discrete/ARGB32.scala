@@ -16,9 +16,8 @@
 
 package ai.dragonfly.uriel.color.model.rgb.discrete
 
-import ai.dragonfly.uriel.*
 import ai.dragonfly.uriel.cie.WorkingSpace
-import ai.dragonfly.uriel.color.model.*
+
 import slash.Random
 
 import scala.language.implicitConversions

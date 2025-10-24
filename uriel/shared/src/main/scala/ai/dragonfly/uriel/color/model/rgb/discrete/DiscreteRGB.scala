@@ -16,7 +16,6 @@
 
 package ai.dragonfly.uriel.color.model.rgb.discrete
 
-import ai.dragonfly.uriel.*
 import ai.dragonfly.uriel.cie.WorkingSpace
 
 import slash.squareInPlace
@@ -75,7 +74,7 @@ trait DiscreteRGB {
   }
 
 
-  trait UtilRGB32[C: DiscreteRGB] extends UtilDiscreteRGB[C] {
+  trait UtilRGB32[C] extends UtilDiscreteRGB[C] {
     override val MAX: Int = 255
 
     inline def clamp(intensity: Float): Int = Math.round(Math.max(0f, Math.min(MAX.toFloat, intensity)))
@@ -88,7 +87,7 @@ trait DiscreteRGB {
   }
 
 
-  trait UtilDiscreteRGB64[C: DiscreteRGB] extends UtilDiscreteRGB[C] {
+  trait UtilDiscreteRGB64[C] extends UtilDiscreteRGB[C] {
     override val MAX: Int = 65535
 
     inline def clamp(intensity: Float): Long = Math.round(Math.max(0f, Math.min(MAX.toFloat, intensity)))

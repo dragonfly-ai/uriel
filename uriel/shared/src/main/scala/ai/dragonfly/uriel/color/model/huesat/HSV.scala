@@ -19,8 +19,6 @@ package ai.dragonfly.uriel.color.model.huesat
 import narr.*
 import ai.dragonfly.uriel.*
 import ai.dragonfly.uriel.cie.WorkingSpace
-import ai.dragonfly.uriel.color.model.*
-import ai.dragonfly.mesh.*
 import ai.dragonfly.mesh.shape.*
 import slash.*
 import slash.Constant.π

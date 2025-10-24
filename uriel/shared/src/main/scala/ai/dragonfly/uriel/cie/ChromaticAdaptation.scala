@@ -21,7 +21,6 @@ import slash.vectorf.*
 
 import slash.matrixf
 import matrixf.*
-import matrixf.MatF.*
 
 import scala.language.implicitConversions
 
