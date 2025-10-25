@@ -94,7 +94,7 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
    * ColorSpace traits for companion objects of Color Models.
    */
 
-  trait ColorSpace[C: ColorModel] extends Sampleable[C] {
+  trait ColorSpace[C] extends Sampleable[C] {
 
     /**
      * Computes a weighted average of two colors in C color space.
@@ -141,7 +141,7 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
 
   }
 
-  trait DiscreteSpace[C: DiscreteColorModel] extends ColorSpace[C] {
+  trait DiscreteSpace[C] extends ColorSpace[C] {
 
   }
 
@@ -176,7 +176,7 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
 //    }
   }
 
-  trait CylindricalSpace[N <: Int, C: CylindricalColorModel[N, _]] extends VectorSpace[N, C] {
+  trait CylindricalSpace[N <: Int, C] extends VectorSpace[N, C] {
 
   }
 
@@ -268,9 +268,7 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
    * @return an instance of the ColorFrequency class.
    */
 
-  case class ColorFrequency[C:ColorModel](color: C, frequency: Double) {
-
-    //
+  case class ColorFrequency[C](color: C, frequency: Double) {
     //  /**
     //    * Compares this color's frequency to that color's frequency.
     //    * @param cf a map with color objects as Keys and Integer values as frequencies.
@@ -282,5 +280,5 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
     //    else 0
     //  }
   }
-  
+
 }
