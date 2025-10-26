@@ -211,4 +211,250 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
 
     }
   }
+
+  // HSLA
+
+
+  object HSLA extends HueSaturationSpace[4, HSLA] {
+
+    opaque type HSLA = VecF[4]
+
+    override lazy val usableGamut: Gamut = new Gamut( Cylinder(sideSegments = 64).toMeshF )
+
+    def apply(values: NArray[Float]): HSLA = dimensionCheck(values, 4).asInstanceOf[HSLA]
+
+    def clamp(values: NArray[Float]): HSLA = {
+      dimensionCheck(values, 4)
+      clamp(values(0), values(1), values(2), values(3))
+    }
+
+    /**
+     * HSL is the primary type for representing colors in HSL space.
+     *
+     * @constructor Create a new HSV object from three Float values.  This constructor does not validate input parameters.
+     *              For values taken from user input, sensors, or otherwise uncertain sources, consider using the factory method in the Color companion object.
+     * @see [[ai.dragonfly.color.ColorVector.hsl]] for a method of constructing HSL objects that validates inputs.
+     * @see [[https://en.wikipedia.org/wiki/HSL_and_HSV]] for more information about the HSL color space.
+     * @param hue        an angle ranging from [0-360] degrees.  Values outside of this range may cause errors.
+     * @param saturation a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @param lightness  a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @return an instance of the HSL case class.
+     * @example {{{
+     * val c = HSL(211f, 75f, 33.3333f)
+     * c.toString()  // returns "HSL(211.000,75.000,33.333)"
+     * }}}
+     */
+    def apply(hue: Float, saturation: Float, lightness: Float): HSLA = {
+      NArray[Float](hue, saturation, lightness, 1f).asInstanceOf[HSLA]
+    }
+
+    /**
+     * HSL is the primary type for representing colors in HSL space.
+     *
+     * @constructor Create a new HSV object from three Float values.  This constructor does not validate input parameters.
+     *              For values taken from user input, sensors, or otherwise uncertain sources, consider using the factory method in the Color companion object.
+     * @see [[ai.dragonfly.color.ColorVector.hsl]] for a method of constructing HSL objects that validates inputs.
+     * @see [[https://en.wikipedia.org/wiki/HSL_and_HSV]] for more information about the HSL color space.
+     * @param hue        an angle ranging from [0-360] degrees.  Values outside of this range may cause errors.
+     * @param saturation a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @param lightness  a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @return an instance of the HSL case class.
+     * @example {{{
+     * val c = HSL(211f, 75f, 33.3333f)
+     * c.toString()  // returns "HSL(211.000,75.000,33.333)"
+     * }}}
+     */
+    def apply(hue: Float, saturation: Float, lightness: Float, alpha: Float): HSLA = {
+      NArray[Float](hue, saturation, lightness, alpha).asInstanceOf[HSLA]
+    }
+
+    def clamp(hue: Float, saturation: Float, lightness: Float): HSLA = NArray[Float](
+      clampHue(hue),
+      clamp0to1(saturation),
+      clamp0to1(lightness),
+      1f
+    ).asInstanceOf[HSLA]
+
+    def clamp(hue: Float, saturation: Float, lightness: Float, alpha: Float): HSLA = NArray[Float](
+      clampHue(hue),
+      clamp0to1(saturation),
+      clamp0to1(lightness),
+      alpha
+    ).asInstanceOf[HSLA]
+
+    /**
+     * Factory method for creating instances of the HSL class.  This method validates input parameters and throws an exception
+     * if one or more of them lie outside of their allowed ranges.
+     *
+     * @param saturation an angle ranging from [0-360] degrees.
+     * @param hue        a percentage ranging from [0-100].
+     * @param lightness  a percentage ranging from [0-100].
+     * @return an instance of the HSL case class.
+     */
+    def getIfValid(hue: Float, saturation: Float, lightness: Float): Option[HSLA] = {
+      if (validHue(hue) && valid0to1(saturation) && valid0to1(lightness)) Some(apply(hue, saturation, lightness))
+      else None
+    }
+    /**
+     * Factory method for creating instances of the HSL class.  This method validates input parameters and throws an exception
+     * if one or more of them lie outside of their allowed ranges.
+     *
+     * @param saturation an angle ranging from [0-360] degrees.
+     * @param hue        a percentage ranging from [0-100].
+     * @param lightness  a percentage ranging from [0-100].
+     * @param alpha      the alpha channel 0f - 1f.
+     * @return an instance of the HSL case class.
+     */
+    def getIfValid(hue: Float, saturation: Float, lightness: Float, alpha:Float): Option[HSLA] = {
+      if (validHue(hue) && valid0to1(saturation) && valid0to1(lightness)) Some(apply(hue, saturation, lightness, alpha))
+      else None
+    }
+
+    //inline def toHSL(red: Float, green: Float, blue: Float): HSL =
+
+    override def random(r: scala.util.Random = Random.defaultRandom): HSLA = apply(
+      NArray[Float](
+        r.nextFloat() * 360f,
+        r.nextFloat(),
+        r.nextFloat(),
+        r.nextFloat()
+      )
+    )
+
+    //    override def toVec(hsl: HSL): VecF[3] = VecF[3](
+    //      (hsl(1) * Math.cos(slash.degreesToRadians(hsl(0)))).toFloat,
+    //      (hsl(1) * Math.sin(slash.degreesToRadians(hsl(0)))).toFloat,
+    //      hsl(2)
+    //    )
+
+    def hue(hsl: HSLA): Float = hsl(0)
+
+    def saturation(hsl: HSLA): Float = hsl(1)
+
+    def lightness(hsl: HSLA): Float = hsl(2)
+
+    def alpha(hsl: HSLA): Float = hsl(3)
+
+    override def fromVec(v: VecF[4]): HSLA = {
+      val r: Float = Math.sqrt(squareInPlace(v.x) + squareInPlace(v.y)).toFloat
+      val theta: Float = (π + Math.atan2(v.y, v.x)).toFloat
+      apply(
+        radiansToDegrees(theta).toFloat,
+        r,
+        v.z,
+        v.w
+      )
+    }
+
+    def fromRGB(rgb: RGB): HSLA = {
+      val values: NArray[Float] = hueMinMax(rgb.red, rgb.green, rgb.blue)
+
+      val delta: Float = values(2 /*MAX*/) - values(1 /*min*/)
+      val L: Float = values(1 /*min*/) + values(2 /*MAX*/)
+
+      HSLA.apply(
+        values(0),
+        if (delta == 0.0) 0f else delta / (1f - Math.abs(L - 1f)),
+        0.5f * L, // (min + max) / 2
+      )
+    }
+
+    override def fromRGBA(rgba: RGBA): HSLA = {
+      val hsl:HSL = HSL.fromRGB(rgba.toRGB)
+      HSLA.apply(
+        hsl.hue,
+        hsl.saturation,
+        hsl.lightness,
+        rgba.alpha
+      )
+    }
+
+    override def fromXYZA(xyza: XYZA): HSLA = fromXYZ(xyza.toXYZ)
+
+    //    override def vecTo_sRGB_ARGB(v: VecF[3]): ai.dragonfly.mesh.sRGB.ARGB32 = {
+    //      Gamut.XYZtoARGB32(
+    //        fromVec(v).toXYZ.asInstanceOf[VecF[3]]
+    //      ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+    //    }
+
+    override def toString:String = "HSLA"
+  }
+
+  type HSLA = HSLA.HSLA
+
+  given CylindricalColorModel[4, HSLA] with {
+    extension (hsl: HSLA) {
+      inline def hue: Float = HSLA.hue(hsl)
+
+      inline def saturation: Float = HSLA.saturation(hsl)
+
+      inline def lightness: Float = HSLA.lightness(hsl)
+
+      inline def alpha: Float = HSLA.alpha(hsl)
+
+      override def similarity(that: HSLA): Double = HSLA.similarity(hsl, that)
+
+      override def copy: HSLA = NArray[Float](hue, saturation, lightness, alpha).asInstanceOf[HSLA]
+
+      override def vec: VecF[4] = VecF[4](
+        (saturation * Math.cos(slash.degreesToRadians(hue))).toFloat,
+        (saturation * Math.sin(slash.degreesToRadians(hue))).toFloat,
+        lightness,
+        alpha
+      )
+
+      //      override def toVec: VecF[3] = VecF[3](
+      //        (hsl(1) * Math.cos(slash.degreesToRadians(hsl(0)))).toFloat,
+      //        (hsl(1) * Math.sin(slash.degreesToRadians(hsl(0)))).toFloat,
+      //        hsl(2)
+      //      )
+
+      override def toRGB: RGB = {
+        // https://www.rapidtables.com/convert/color/hsl-to-rgb.html
+        val C: Float = (1f - Math.abs((2f * hsl.lightness) - 1f)) * hsl.saturation
+        RGB.apply(
+          HSL.hcxmToRGBvalues(
+            hsl.hue,
+            C,
+            HSL.XfromHueC(hsl.hue, C), // X
+            hsl.lightness - (0.5f * C) // m
+          )
+        )
+      }
+
+      override def toXYZ: XYZ = toRGB.toXYZ
+
+      override def render: String = s"HSL($hue, $saturation, $lightness)"
+
+      /**
+       * @return a string representing the color in an SVG friendly way.
+       * @example {{{
+       * val c = HSL(211f, 75f, 33.3333f)
+       * c.svg() // returns "hsl(211.000,75.0%,33.3%)"
+       * }}}
+       */
+      def svg(): String = s"hsl(${f"$hue%1.3f"}, ${f"$saturation%1.1f"}%, ${f"$lightness%1.1f"}%)"
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toXYZA: XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+    }
+  }
 }

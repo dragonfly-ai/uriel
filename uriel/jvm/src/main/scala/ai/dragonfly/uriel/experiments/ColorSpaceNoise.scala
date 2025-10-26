@@ -59,6 +59,7 @@ object ColorSpaceNoise extends App {
 //    noisyImage(HSV)
 //
 //    noisyImage(HSL)
+    noisyImage(HSLA)
 //
 //    noisyImage(XYZ)
 //    noisyImage(XYZA)
@@ -66,8 +67,8 @@ object ColorSpaceNoise extends App {
 //    noisyImage(Lab)
 //    noisyImage(LabA)
 
-    noisyImage(Luv)
-    noisyImage(LuvA)
+//    noisyImage(Luv)
+//    noisyImage(LuvA)
 
   }
 
