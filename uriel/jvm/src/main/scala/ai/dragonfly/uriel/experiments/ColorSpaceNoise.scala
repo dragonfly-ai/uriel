@@ -43,8 +43,8 @@ object ColorSpaceNoise extends App {
 
       for (y <- 0 until h) {
         for (x <- 0 until w) {
-          val c = space.random()
-          bi.setRGB(x, y, Gamut.XYZtoARGB32(c.toXYZ.asInstanceOf[VecF[3]]))
+          //bi.setRGB(x, y, Gamut.XYZtoARGB32(c.toXYZ.asInstanceOf[VecF[3]]))
+          bi.setRGB(x, y, space.random().to_sRGB_ARGB32.asInstanceOf[Int])
         }
       }
 
@@ -54,12 +54,22 @@ object ColorSpaceNoise extends App {
     }
 
     noisyImage(RGB)
+    noisyImage(RGBA)
+
     noisyImage(LRGB)
+
     noisyImage(CMY)
+
     noisyImage(HSV)
+
     noisyImage(HSL)
+
     noisyImage(XYZ)
+    noisyImage(XYZA)
+
     noisyImage(Lab)
+    noisyImage(LabA)
+
     noisyImage(Luv)
 
   }

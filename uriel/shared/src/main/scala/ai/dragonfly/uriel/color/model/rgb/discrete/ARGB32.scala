@@ -141,7 +141,7 @@ trait ARGB32 extends DiscreteRGB { self: WorkingSpace =>
 
     override def fromRGB(rgb: RGB): ARGB32 = apply(clamp(rgb.red * MAX, rgb.green * MAX, rgb.blue * MAX))
 
-    override def fromRGBA(rgba: RGBA): ARGB32 = apply(clamp(rgba.alpha, rgba.red * MAX, rgba.green * MAX, rgba.blue * MAX))
+    override def fromRGBA(rgba: RGBA): ARGB32 = apply(clamp(rgba.alpha * MAX, rgba.red * MAX, rgba.green * MAX, rgba.blue * MAX))
 
     override def toString:String = "ARGB32"
   }

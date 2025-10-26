@@ -52,8 +52,8 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
     extension (c: C) {
       def to_sRGB_ARGB32: ai.dragonfly.mesh.sRGB.ARGB32 = {
         import ai.dragonfly.uriel.ColorContext.sRGB
-        val xyza = toXYZA
-        if (ctx == sRGB) sRGB.ARGB32.fromXYZA(sRGB.XYZA(xyza.x, xyza.y, xyza.z, xyza.alpha)).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+        val xyza = toXYZA.asInstanceOf[sRGB.XYZA]
+        if (ctx == sRGB) sRGB.ARGB32.fromXYZA(xyza).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
         else {
           val chromaticAdapter: ChromaticAdaptationAlpha[ctx.type, sRGB.type] = ChromaticAdaptationAlpha[ctx.type, sRGB.type](ctx, sRGB)
           val xyza: chromaticAdapter.source.XYZA = toXYZA.asInstanceOf[chromaticAdapter.source.XYZA]

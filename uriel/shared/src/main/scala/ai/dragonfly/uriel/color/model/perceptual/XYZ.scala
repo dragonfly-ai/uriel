@@ -152,10 +152,9 @@ trait XYZ { self:WorkingSpace =>
       v.copy
     }
 
+    override def random(r: Random): XYZA = fromXYZ(XYZ.random(r), r.nextFloat)
+
     override def fromVec(v: VecF[4]): XYZA = v.copy
-
-
-    override def euclideanDistanceSquaredTo(c1: XYZA, c2: XYZA): Double = c1.vec.euclideanDistanceSquaredTo(c2.vec)
 
 //    override def vecTo_sRGB_ARGB(v: VecF[4]): ai.dragonfly.mesh.sRGB.ARGB32 = {
 //      val c: ai.dragonfly.mesh.sRGB.ARGB32 = Gamut.XYZtoARGB32(
@@ -163,6 +162,8 @@ trait XYZ { self:WorkingSpace =>
 //      ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
 //      ai.dragonfly.mesh.sRGB.ARGB32((255 * v(3)).toInt, c.red, c.green, c.blue)
 //    }
+
+    override def euclideanDistanceSquaredTo(c1: XYZA, c2: XYZA): Double = c1.vec.euclideanDistanceSquaredTo(c2.vec)
 
     def fromRGB(rgb:RGB, alpha:Float):XYZA = {
       val xyz: XYZ = rgb.toXYZ
@@ -173,11 +174,9 @@ trait XYZ { self:WorkingSpace =>
 
     override def fromXYZ(xyz: XYZ): XYZA = apply(xyz.x, xyz.y, xyz.z, 1f)
 
+    def fromXYZ(xyz: XYZ, alpha: Float): XYZA = apply(xyz.x, xyz.y, xyz.z, alpha)
+
     override def fromXYZA(xyza: XYZA): XYZA = copy(xyza)
-
-    def fromXYZ(xyz: XYZ, alpha: Float = 1f): XYZA = apply(xyz.x, xyz.y, xyz.z, alpha)
-
-    override def random(r: Random): XYZA = fromXYZ(XYZ.random(r), r.nextFloat)
 
     override def toString:String = "XYZA"
 
@@ -219,7 +218,7 @@ trait XYZ { self:WorkingSpace =>
 
       override def toXYZA(alpha: Float): XYZA = XYZA(xyza.x, xyza.y, xyza.z, alpha)
 
-      override def render: String = s"XYZA($x,$y,$z, $alpha)"
+      override def render: String = s"XYZA($x,$y,$z,$alpha)"
 
     }
   }

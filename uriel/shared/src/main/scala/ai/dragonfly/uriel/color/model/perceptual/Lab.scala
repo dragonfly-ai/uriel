@@ -50,39 +50,21 @@ trait Lab { self: WorkingSpace =>
      * @return an instance of the LAB case class.
      * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
      */
-    def apply(L: Float, a: Float, b: Float): Lab = apply(NArray[Float](a, b, L))
+    def apply(L: Float, a: Float, b: Float): Lab = apply(NArray[Float](L, a, b))
 
     inline def f(t: Double): Double = if (t > ϵ) Math.cbrt(t) else (t * `k/116`) + `16/116`
 
     inline def fInverse(t: Double): Double = if (t > `∛ϵ`) cubeInPlace(t) else (`116/k` * t) - `16/k`
 
-    def L(lab: Lab): Float = lab(2)
+    def L(lab: Lab): Float = lab(0)
 
-    def a(lab: Lab): Float = lab(0)
+    def a(lab: Lab): Float = lab(1)
 
-    def b(lab: Lab): Float = lab(1)
+    def b(lab: Lab): Float = lab(2)
 
     override def fromVec(v: VecF[3]): Lab = v
 
     override def fromRGBA(rgba: RGBA): Lab = fromXYZ(rgba.toXYZ)
-
-//    override def toVec(lab: Lab): VecF[3] = lab.asInstanceOf[VecF[3]].copy
-//
-//    override def toRGB(lab: Lab): RGB = lab.toXYZ.toRGB
-
-//    override def toXYZ(lab: Lab): XYZ = {
-//      //val white: XYZ = whitePoint //XYZ(illuminant.whitePointValues)
-//      val fy: Double = `1/116` * (lab.L + 16.0)
-//
-//      XYZ(
-//        (fInverse((0.002 * lab.a) + fy) * illuminant.xₙ).toFloat, // X
-//        (if (lab.L > kϵ) {
-//          val l = lab.L + 16.0
-//          `1/116³` * (l * l * l) * illuminant.yₙ
-//        } else `1/k` * lab.L * illuminant.yₙ).toFloat, // Y
-//        (fInverse(fy - (0.005 * lab.b)) * illuminant.zₙ).toFloat, // Z
-//      )
-//    }
 
     /**
      * Requires a reference 'white' because although black provides a lower bound for XYZ values, they have no upper bound.
@@ -92,7 +74,6 @@ trait Lab { self: WorkingSpace =>
      */
     def fromXYZ(xyz: XYZ): Lab = {
       val fy: Double = f(illuminant.`1/yₙ` * xyz.y)
-
       apply(
         (116.0 * fy - 16.0).toFloat,
         (500.0 * (f(illuminant.`1/xₙ` * xyz.x) - fy)).toFloat,
@@ -111,7 +92,7 @@ trait Lab { self: WorkingSpace =>
   given PerceptualColorModel[3, Lab] with {
     extension (lab: Lab) {
 
-      override inline def copy: Lab = Lab(a, b, L)
+      override inline def copy: Lab = Lab(L, a, b)
 
       inline def L: Float = Lab.L(lab)
 
@@ -160,6 +141,139 @@ trait Lab { self: WorkingSpace =>
       }
 
       override def render: String = s"L*a*b*($L,$a,$b)"
+
+    }
+  }
+
+  // LabA
+  object LabA extends PerceptualSpace[4, LabA] {
+
+    opaque type LabA = VecF[4]
+
+    override lazy val fullGamut: Gamut = Lab.fullGamut
+
+    override lazy val usableGamut: Gamut = Lab.usableGamut
+
+    override def random(r: Random): LabA = {
+      val lab: Lab = Lab.random(r)
+      LabA(lab.L, lab.a, lab.b, r.nextFloat())
+    }
+
+    override def maxDistanceSquared: Double = usableGamut.maxDistSquared
+
+    def apply(values: NArray[Float]): LabA = dimensionCheck(values, 4).asInstanceOf[LabA]
+
+    /**
+     * @param L the L* component of the CIE L*a*b* color.
+     * @param a the a* component of the CIE L*a*b* color.
+     * @param b the b* component of the CIE L*a*b* color.
+     * @return an instance of the LAB case class.
+     * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
+     */
+    def apply(L: Float, a: Float, b: Float): LabA = apply(NArray[Float](a, b, L, 1f))
+
+    /**
+     * @param L the L* component of the CIE L*a*b* color.
+     * @param a the a* component of the CIE L*a*b* color.
+     * @param b the b* component of the CIE L*a*b* color.
+     * @param alpha the alpha channel
+     * @return an instance of the LAB case class.
+     * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
+     */
+    def apply(L: Float, a: Float, b: Float, alpha: Float): LabA = apply(NArray[Float](L, a, b, alpha))
+
+    inline def f(t: Double): Double = if (t > ϵ) Math.cbrt(t) else (t * `k/116`) + `16/116`
+
+    inline def fInverse(t: Double): Double = if (t > `∛ϵ`) cubeInPlace(t) else (`116/k` * t) - `16/k`
+
+    def L(lab: LabA): Float = lab(0)
+
+    def a(lab: LabA): Float = lab(1)
+
+    def b(lab: LabA): Float = lab(2)
+
+    def alpha(lab: LabA): Float = lab(3)
+
+    override def fromVec(v: VecF[4]): LabA = v
+
+    override def fromRGBA(rgba: RGBA): LabA = fromXYZA(rgba.toXYZA)
+
+    /**
+     * Requires a reference 'white' because although black provides a lower bound for XYZ values, they have no upper bound.
+     *
+     * @param xyz an xyz color
+     * @return a Laab color
+     */
+    def fromXYZ(xyz: XYZ): LabA = {
+      val lab: Lab = Lab.fromXYZ(xyz)
+      LabA(lab.L, lab.a, lab.b)
+    }
+
+    override def fromXYZA(xyza: XYZA): LabA = {
+      val lab: Lab = Lab.fromXYZA(xyza)
+      LabA(lab.L, lab.a, lab.b, xyza.alpha)
+    }
+
+    override def toString:String = "LabA"
+
+  }
+
+  type LabA = LabA.LabA
+
+  given PerceptualColorModel[4, LabA] with {
+    extension (laba: LabA) {
+
+      override inline def copy: LabA = LabA(a, b, L, alpha)
+
+      inline def L: Float = LabA.L(laba)
+
+      inline def a: Float = LabA.a(laba)
+
+      inline def b: Float = LabA.b(laba)
+
+      inline def alpha: Float = LabA.alpha(laba)
+
+      override def similarity(that: LabA): Double = LabA.similarity(laba, that)
+
+      override def vec: VecF[4] = laba.asInstanceOf[VecF[4]].copy
+
+      override def toRGB: RGB = toXYZ.toRGB
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      def toXYZ: XYZ = {
+        //val white: XYZ = whitePoint //XYZ(illuminant.whitePointValues)
+        val fy: Double = `1/116` * (laba.L + 16.0)
+
+        XYZ(
+          (Lab.fInverse((0.002 * laba.a) + fy) * illuminant.xₙ).toFloat, // X
+          (if (laba.L > kϵ) {
+            val l = laba.L + 16.0
+              `1/116³` * (l * l * l) * illuminant.yₙ
+          } else `1/k` * laba.L * illuminant.yₙ).toFloat, // Y
+          (Lab.fInverse(fy - (0.005 * laba.b)) * illuminant.zₙ).toFloat, // Z
+        )
+      }
+
+      override def toXYZA: XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def render: String = s"L*a*b*A($L,$a,$b,$alpha)"
 
     }
   }
