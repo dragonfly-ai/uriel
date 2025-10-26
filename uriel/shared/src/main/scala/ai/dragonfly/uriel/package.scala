@@ -32,6 +32,7 @@ package object uriel {
   inline def valid0to1(i0: Float, i1: Float):Boolean = valid0to1(i0) && valid0to1(i1)
   inline def valid0to1(i0: Float, i1: Float, i2: Float):Boolean = valid0to1(i0) && valid0to1(i1) && valid0to1(i2)
   inline def valid0to1(i0: Float, i1: Float, i2: Float, i3: Float):Boolean = valid0to1(i0) && valid0to1(i1) && valid0to1(i2) && valid0to1(i3)
+  inline def valid0to1(i0: Float, i1: Float, i2: Float, i3: Float, i4: Float):Boolean = valid0to1(i0) && valid0to1(i1) && valid0to1(i2) && valid0to1(i3) && valid0to1(i4)
 
   inline def clamp0to1(i: Float): Float = Math.min(1f, Math.max(0f, i))
   inline def clamp0to1(i0: Float, i1: Float, i2: Float):NArray[Float] = NArray[Float](
@@ -39,6 +40,9 @@ package object uriel {
   )
   inline def clamp0to1(i0: Float, i1: Float, i2: Float, i3: Float):NArray[Float] = NArray[Float](
     clamp0to1(i0), clamp0to1(i1), clamp0to1(i2), clamp0to1(i3)
+  )
+  inline def clamp0to1(i0: Float, i1: Float, i2: Float, i3: Float, i4: Float):NArray[Float] = NArray[Float](
+    clamp0to1(i0), clamp0to1(i1), clamp0to1(i2), clamp0to1(i3), clamp0to1(i4)
   )
 
   trait ProvidedColorContexts extends WorkingSpace

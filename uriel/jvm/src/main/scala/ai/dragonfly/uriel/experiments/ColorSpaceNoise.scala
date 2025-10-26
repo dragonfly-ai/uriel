@@ -49,30 +49,31 @@ object ColorSpaceNoise extends App {
       else println(s"\t\tFailed to write $fileName")
     }
 
-//    noisyImage(RGB)
-//    noisyImage(RGBA)
-//
-//    noisyImage(LRGB)
-//    noisyImage(LRGBA)
-//
-//    noisyImage(CMY)
+    noisyImage(RGB)
+    noisyImage(RGBA)
+
+    noisyImage(LRGB)
+    noisyImage(LRGBA)
+
+    noisyImage(CMY)
     noisyImage(CMYA)
-//
-//    noisyImage(HSV)
-//    noisyImage(HSVA)
-//
-//    noisyImage(HSL)
-//    noisyImage(HSLA)
-//
-//    noisyImage(XYZ)
-//    noisyImage(XYZA)
-//
-//    noisyImage(Lab)
-//    noisyImage(LabA)
 
-//    noisyImage(Luv)
-//    noisyImage(LuvA)
+    noisyImage(CMYK)
+    noisyImage(CMYKA)
 
+    noisyImage(HSV)
+    noisyImage(HSVA)
+
+    noisyImage(HSL)
+    noisyImage(HSLA)
+
+    noisyImage(XYZ)
+    noisyImage(XYZA)
+
+    noisyImage(Lab)
+    noisyImage(LabA)
+
+    noisyImage(Luv)
+    noisyImage(LuvA)
   }
-
 }

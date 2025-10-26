@@ -77,6 +77,7 @@ trait CMYK { self: WorkingSpace =>
     override def random(r: scala.util.Random = Random.defaultRandom): CMYK = apply(
       r.nextFloat(),
       r.nextFloat(),
+      r.nextFloat(),
       r.nextFloat()
     )
 
@@ -212,7 +213,233 @@ trait CMYK { self: WorkingSpace =>
 
       override def similarity(that: CMYK): Double = CMYK.similarity(cmyk, that)
 
-      override def render: String = s"CMYK($cyan, $magenta, $yellow, $key)"
+      override def render: String = s"CMYK($cyan,$magenta,$yellow,$key)"
+
+    }
+  }
+
+  // CMYKA
+
+
+  object CMYKA extends VectorSpace[5, CMYKA] {
+
+    opaque type CMYKA = VecF[5]
+
+    override lazy val usableGamut: Gamut = new Gamut( Cube(1.0, 32).toMeshF )
+
+    override val maxDistanceSquared: Double = 5.0
+
+    def apply(values: NArray[Float]): CMYKA = {
+      if (values.length == 3) apply(values(0), values(1), values(2))
+      else dimensionCheck(values, 5).asInstanceOf[CMYKA]
+    }
+
+    def apply(cyan: Float, magenta: Float, yellow: Float): CMYKA = {
+      val values: NArray[Float] = NArray[Float](
+        cyan,
+        magenta,
+        yellow,
+        0f,
+        0f
+      )
+
+      values(3) = Math.min(values(0), Math.min(values(1), values(2)))
+
+      values(0) = values(0) - values(3)
+      values(1) = values(1) - values(3)
+      values(2) = values(2) - values(3)
+
+      values.asInstanceOf[CMYKA]
+    }
+
+    def apply(cyan: Float, magenta: Float, yellow: Float, key: Float): CMYKA = apply(NArray[Float](cyan, magenta, yellow, key, 1f))
+
+    def apply(cyan: Float, magenta: Float, yellow: Float, key: Float, alpha: Float): CMYKA = apply(NArray[Float](cyan, magenta, yellow, key, alpha))
+
+    /**
+     * Factory method for creating instances of the CMYKA class.
+     * This method validates input parameters at the cost of some performance.
+     *
+     * @param cyan    a value between [0-1]
+     * @param magenta a value between [0-1]
+     * @param yellow  a value between [0-1]
+     * @param key   a value between [0-1]
+     * @return an instance of the CMYK class.
+     */
+    def getIfValid(cyan: Float, magenta: Float, yellow: Float, key: Float): Option[CMYKA] = {
+      if (valid0to1(key) && valid0to1(cyan, magenta, yellow) && valid0to1(cyan + key, magenta + key, yellow + key)) {
+        Some(apply(cyan, magenta, yellow, key))
+      }
+      else None
+    }
+
+    /**
+     * Factory method for creating instances of the CMYKA class.
+     * This method validates input parameters at the cost of some performance.
+     *
+     * @param cyan    a value between [0-1]
+     * @param magenta a value between [0-1]
+     * @param yellow  a value between [0-1]
+     * @param key     a value between [0-1]
+     * @param alpha   a value between [0-1]
+     * @return an instance of the CMYK class.
+     */
+    def getIfValid(cyan: Float, magenta: Float, yellow: Float, key: Float, alpha: Float): Option[CMYKA] = {
+      if (valid0to1(cyan, magenta, yellow, key, alpha) && valid0to1(cyan + key, magenta + key, yellow + key)) {
+        Some(apply(cyan, magenta, yellow, key, alpha))
+      }
+      else None
+    }
+
+    override def random(r: scala.util.Random = Random.defaultRandom): CMYKA = apply(
+      r.nextFloat(),
+      r.nextFloat(),
+      r.nextFloat(),
+      r.nextFloat(),
+      r.nextFloat()
+    )
+
+    def cyan(cmyka: CMYKA): Float = cmyka(0)
+
+    def magenta(cmyka: CMYKA): Float = cmyka(1)
+
+    def yellow(cmyka: CMYKA): Float = cmyka(2)
+
+    def key(cmyka: CMYKA): Float = cmyka(3)
+
+    def black(cmyka: CMYKA): Float = cmyka(3)
+
+    def alpha(cmyka: CMYKA): Float = cmyka(4)
+
+    override def euclideanDistanceSquaredTo(cmyka1: CMYKA, cmyka2: CMYKA): Double = cmyka1.euclideanDistanceSquaredTo(cmyka2)
+
+    //    override def toVec(c: CMYK): VecF[3] = VecF[3](
+    //      c.cyan + c.key,
+    //      c.yellow + c.key,
+    //      c.magenta + c.key
+    //    )
+
+    override def fromVec(v: VecF[5]): CMYKA = apply(v.x, v.y, v.z, v.w, v(4))
+
+    def fromRGB(rgb: RGB): CMYKA = {
+      // http://color.lukas-stratmann.com/color-systems/cmy.html
+      val k: Float = (1f - Math.max(rgb.red, Math.max(rgb.green, rgb.blue)))
+      apply(
+        clamp0to1(
+          (1f - rgb.red) - k,
+          (1f - rgb.green) - k,
+          (1f - rgb.blue) - k,
+          k,
+          1f
+        )
+      )
+    }
+
+    override def fromRGBA(rgba: RGBA): CMYKA = {
+      val cmyk:CMYK = CMYK.fromRGB(RGB(rgba.red, rgba.green, rgba.blue))
+      CMYKA( cmyk.cyan, cmyk.yellow, cmyk.magenta, cmyk.key, rgba.alpha )
+    }
+
+    override def fromXYZ(xyz: XYZ): CMYKA = fromRGB(xyz.toRGB)
+
+    override def fromXYZA(xyza: XYZA): CMYKA = {
+      val cmyk:CMYK = CMYK.fromXYZ(XYZ(xyza.x, xyza.y, xyza.z))
+      CMYKA( cmyk.cyan, cmyk.yellow, cmyk.magenta, cmyk.key, xyza.alpha )
+    }
+
+    override def toString:String = "CMYKA"
+
+  }
+
+  /**
+   * CMYK is the primary type for representing colors in CMYK space.
+   *
+   * @constructor Create a new CMYK object from three Float values.  This constructor does not validate input parameters.
+   *              For values taken from user input, sensors, or otherwise uncertain sources, consider using the factory method in the Color companion object.
+   * @see [[ai.dragonfly.color.CMYK.getIfValid]] for a method of constructing CMYK objects that validates inputs.
+   * @see [[https://en.wikipedia.org/wiki/CMYK_color_model]] for more information about the CMYK color space.
+   * @param cyan    a value ranging from [0-1].  Values outside of this range may cause errors.
+   * @param magenta a value ranging from [0-1].  Values outside of this range may cause errors.
+   * @param yellow  a value ranging from [0-1].  Values outside of this range may cause errors.
+   * @param key   a value ranging from [0-1].  Values outside of this range may cause errors.
+   * @param alpha   a value ranging from [0-1].  Values outside of this range may cause errors.
+   * @return an instance of the CMYK type.
+   * @example {{{
+   * val c = CMYK(1f, 0.25f, 0.5f, 0f)
+   * c.toString()  // returns "CMYK(1.000,0.250,0.500,0.000)"
+   * }}}
+   */
+
+  type CMYKA = CMYKA.CMYKA
+
+  given VectorColorModel[5, CMYKA] with {
+    extension (cmyka: CMYKA) {
+
+      def cyan: Float = CMYKA.cyan(cmyka)
+
+      def magenta: Float = CMYKA.magenta(cmyka)
+
+      def yellow: Float = CMYKA.yellow(cmyka)
+
+      def key: Float = CMYKA.key(cmyka)
+
+      def black: Float = CMYKA.black(cmyka)
+
+      def alpha: Float = CMYKA.alpha(cmyka)
+
+      override def copy: CMYKA = NArray[Float](cyan, magenta, yellow, key, alpha).asInstanceOf[CMYKA]
+
+      override def vec: VecF[5] = VecF[5](
+        cmyka.cyan,
+        cmyka.yellow,
+        cmyka.magenta,
+        cmyka.key,
+        cmyka.alpha
+      )
+
+      override def toRGB: RGB = {
+        // http://color.lukas-stratmann.com/color-systems/cmy.html
+        clamp0to1(
+          1f - (cyan + key),
+          1f - (magenta + key),
+          1f - (yellow + key)
+        ).asInstanceOf[RGB]
+
+        // https://www.rapidtables.com/convert/color/cmyk-to-rgb.html
+        //      RGB.apply(
+        //        RGB.clamp0to1(
+        //          (1.0 - cyan) * (1.0 - key),
+        //          (1.0 - magenta) * (1.0 - key),
+        //          (1.0 - yellow) * (1.0 - key)
+        //        )
+        //      )
+      }
+
+      override def toRGBA: RGBA = {
+        val rgb:RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb:RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toXYZ: XYZ = toRGB.toXYZ
+
+      override def toXYZA: XYZA = {
+        val xyz:XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz:XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def similarity(that: CMYKA): Double = CMYKA.similarity(cmyka, that)
+
+      override def render: String = s"CMYKA($cyan,$magenta,$yellow,$key,$alpha)"
 
     }
   }
