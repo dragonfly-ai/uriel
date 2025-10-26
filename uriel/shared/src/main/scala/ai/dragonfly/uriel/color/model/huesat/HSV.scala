@@ -193,8 +193,227 @@ trait HSV extends HueSaturation { self: WorkingSpace =>
         val xyz = toXYZ
         XYZA(xyz.x, xyz.y, xyz.z, alpha)
       }
+    }
+  }
 
+  object HSVA extends HueSaturationSpace[4, HSVA] {
+
+    opaque type HSVA = VecF[4]
+
+    override lazy val usableGamut: Gamut = new Gamut( Cylinder(capSegments = 6).toMeshF )
+
+    def apply(values: NArray[Float]): HSVA = dimensionCheck(values, 4).asInstanceOf[HSVA]
+
+    def clamp(values: NArray[Float]): HSVA = {
+      dimensionCheck(values.length, 4)
+      clamp(values(0), values(1), values(2), values(3))
     }
 
+    /**
+     * HSVA is the primary type for representing colors in HSVA space.
+     *
+     * @constructor Create a new HSVA object from three Float values.  This constructor does not validate
+     *              input parameters.  For values taken from user input, sensors, or otherwise uncertain sources, consider using
+     *              the factory method in the Color companion object.
+     * @see [[ai.dragonfly.color.HSV.getIfValid]] for a method of constructing HSVA objects that validates inputs.
+     * @see [[https://en.wikipedia.org/wiki/HSL_and_HSV]] for more information about the HSVA color space.
+     * @param hue        an angle ranging from [0-360] degrees.  Values outside of this range may cause errors.
+     * @param saturation a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @param value      a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @return an instance of the HSVA case class.
+     * @example {{{
+     * val c = HSVA(211f, 75f, 33.3333f)
+     * c.toString()  // returns "HSVA(211.000,75.000,33.333, 1.0)"
+     * }}}
+     */
+
+    def apply(hue: Float, saturation: Float, value: Float): HSVA = {
+      NArray[Float](hue, saturation, value).asInstanceOf[HSVA]
+    }
+
+    /**
+     * HSV is the primary type for representing colors in HSV space.
+     *
+     * @constructor Create a new HSV object from three Float values.  This constructor does not validate
+     *              input parameters.  For values taken from user input, sensors, or otherwise uncertain sources, consider using
+     *              the factory method in the Color companion object.
+     * @see [[ai.dragonfly.color.HSV.getIfValid]] for a method of constructing HSV objects that validates inputs.
+     * @see [[https://en.wikipedia.org/wiki/HSL_and_HSV]] for more information about the HSV color space.
+     * @param hue        an angle ranging from [0-360] degrees.  Values outside of this range may cause errors.
+     * @param saturation a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @param value      a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @param alpha      a percentage ranging from [0-100].  Values outside of this range may cause errors.
+     * @return an instance of the HSV case class.
+     * @example {{{
+     * val c = HSV(211f, 75f, 33.3333f)
+     * c.toString()  // returns "HSV(211.000,75.000,33.333)"
+     * }}}
+     */
+
+    def apply(hue: Float, saturation: Float, value: Float, alpha: Float): HSVA = {
+      NArray[Float](hue, saturation, value, alpha).asInstanceOf[HSVA]
+    }
+
+    def clamp(hue: Float, saturation: Float, value: Float): HSVA = NArray[Float](
+      clampHue(hue),
+      clamp0to1(saturation),
+      clamp0to1(value)
+    ).asInstanceOf[HSVA]
+
+    def clamp(hue: Float, saturation: Float, value: Float, alpha: Float): HSVA = NArray[Float](
+      clampHue(hue),
+      clamp0to1(saturation),
+      clamp0to1(value),
+      clamp0to1(alpha)
+    ).asInstanceOf[HSVA]
+
+    /**
+     * Factory method for creating instances of the HSV class.  This method validates input parameters and throws an exception
+     * if one or more of them lie outside of their allowed ranges.
+     *
+     * @param saturation an angle ranging from [0-360] degrees.
+     * @param hue        a hue value ranging from [0-1].
+     * @param value      a value (brightness) value ranging from [0-1].
+     * @return an instance of the HSV case class.
+     */
+    def getIfValid(hue: Float, saturation: Float, value: Float): Option[HSVA] = {
+      if (validHue(hue) && valid0to1(saturation) && valid0to1(saturation)) Some(apply(hue, saturation, value))
+      else None
+    }
+
+    /**
+     * Factory method for creating instances of the HSV class.  This method validates input parameters and throws an exception
+     * if one or more of them lie outside of their allowed ranges.
+     *
+     * @param saturation an angle ranging from [0-360] degrees.
+     * @param hue        a hue value ranging from [0-1].
+     * @param value      a value (brightness) value ranging from [0-1].
+     * @param alpha      the alpha channel ranging from [0-1].
+     * @return an instance of the HSV case class.
+     */
+    def getIfValid(hue: Float, saturation: Float, value: Float, alpha: Float): Option[HSVA] = {
+      if (validHue(hue) && valid0to1(saturation) && valid0to1(saturation) && valid0to1(alpha)) Some(apply(hue, saturation, value, alpha))
+      else None
+    }
+
+    override def random(r: scala.util.Random = Random.defaultRandom): HSVA = apply(
+      NArray[Float](
+        r.nextFloat() * 360f,
+        r.nextFloat(),
+        r.nextFloat(),
+        r.nextFloat()
+      )
+    )
+
+    def fromRGB(rgb: RGB): HSVA = {
+      val values: NArray[Float] = hueMinMax(rgb.red, rgb.green, rgb.blue)
+      values(1) = { // S
+        if (values(2 /*MAX*/) == 0.0) 0.0
+        else (values(2 /*MAX*/) - values(1 /*min*/)) / values(2 /*MAX*/)
+      }
+      values.asInstanceOf[HSVA]
+    }
+
+    //    override def toRGB(hsv: HSV): RGB = {
+    //      // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
+    //      val C = hsv.value * hsv.saturation
+    //      HSV.hcxmToRGBvalues(hsv.hue, C, HSV.XfromHueC(hsv.hue, C), hsv.value - C).asInstanceOf[RGB]
+    //    }
+
+    //    override def toXYZ(c: HSV): XYZ = c.toXYZ
+
+    //    override def toVec(hsv: HSV): VecF[3] = VecF[3](
+    //      (hsv(1) * Math.cos(slash.degreesToRadians(hsv(0)))).toFloat,
+    //      (hsv(1) * Math.sin(slash.degreesToRadians(hsv(0)))).toFloat,
+    //      hsv(2)
+    //    )
+
+    def hue(hsv: HSVA): Float = hsv(0)
+
+    def saturation(hsv: HSVA): Float = hsv(1)
+
+    def value(hsv: HSVA): Float = hsv(2)
+
+    def alpha(hsv: HSVA): Float = hsv(3)
+
+    override def toString:String = "HSVA"
+
+    override def fromVec(v: VecF[4]): HSVA = {
+      val r: Float = Math.sqrt(squareInPlace(v.x) + squareInPlace(v.y)).toFloat
+      val theta: Float = (π + Math.atan2(v.y, v.x)).toFloat
+      apply(
+        radiansToDegrees(theta).toFloat,
+        r,
+        v.z,
+        v.w
+      )
+    }
+
+    //    override def vecTo_sRGB_ARGB(v: VecF[3]): ai.dragonfly.mesh.sRGB.ARGB32 = {
+    //      Gamut.XYZtoARGB32(
+    //        fromVec(v).toXYZ.asInstanceOf[VecF[3]]
+    //      ).asInstanceOf[ai.dragonfly.mesh.sRGB.ARGB32]
+    //    }
+
+    override def fromRGBA(rgba: RGBA): HSVA = fromRGB(rgba.toRGB)
+
+    override def fromXYZA(xyza: XYZA): HSVA = fromXYZ(xyza.toXYZ)
+  }
+
+  type HSVA = HSVA.HSVA
+
+  given CylindricalColorModel[4, HSVA] with {
+    extension (hsv: HSVA) {
+
+      //case class HSV private(override val values: NArray[Float]) extends HueSaturation[HSV] {
+
+      inline def hue: Float = HSVA.hue(hsv)
+
+      inline def saturation: Float = HSVA.saturation(hsv)
+
+      inline def value: Float = HSVA.value(hsv)
+
+      inline def alpha: Float = HSVA.alpha(hsv)
+
+      override def copy: HSVA = NArray[Float](hue, saturation, value).asInstanceOf[HSVA]
+
+      override def similarity(that: HSVA): Double = HSVA.similarity(hsv, that)
+
+      override def render: String = s"HSV($hue, $saturation, $value, $alpha)"
+
+      override def vec: VecF[4] = VecF[4](
+        (saturation * Math.cos(slash.degreesToRadians(hue))).toFloat,
+        (saturation * Math.sin(slash.degreesToRadians(hue))).toFloat,
+        value
+      )
+
+      def toRGB: RGB = {
+        // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
+        val C = value * saturation
+        HSV.hcxmToRGBvalues(hue, C, HSV.XfromHueC(hsv.hue, C), value - C).asInstanceOf[RGB]
+      }
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toXYZ: XYZ = toRGB.toXYZ
+
+      override def toXYZA: XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+    }
   }
 }

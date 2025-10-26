@@ -424,7 +424,7 @@ trait HSL extends HueSaturation { self: WorkingSpace =>
 
       override def toXYZ: XYZ = toRGB.toXYZ
 
-      override def render: String = s"HSL($hue, $saturation, $lightness)"
+      override def render: String = s"HSL($hue, $saturation, $lightness, $alpha)"
 
       /**
        * @return a string representing the color in an SVG friendly way.
