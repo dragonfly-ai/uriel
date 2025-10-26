@@ -53,11 +53,12 @@ object ColorSpaceNoise extends App {
 //    noisyImage(RGBA)
 //
 //    noisyImage(LRGB)
+    noisyImage(LRGBA)
 //
 //    noisyImage(CMY)
 //
 //    noisyImage(HSV)
-    noisyImage(HSVA)
+//    noisyImage(HSVA)
 //
 //    noisyImage(HSL)
 //    noisyImage(HSLA)

@@ -129,7 +129,7 @@ trait RGB { self: WorkingSpace =>
 
       inline def blue: Float = RGB.blue(rgb)
 
-      override def render: String = s"RGB($red, $green, $blue)"
+      override def render: String = s"RGB($red,$green,$blue)"
 
       def copy: RGB = RGB(red, green, blue)
 
@@ -258,7 +258,7 @@ trait RGB { self: WorkingSpace =>
 
       inline def alpha: Float = RGBA.alpha(rgba)
 
-      override def render: String = s"RGBA($red, $green, $blue, $alpha)"
+      override def render: String = s"RGBA($red,$green,$blue,$alpha)"
 
       def copy: RGBA = RGBA(red, green, blue, alpha)
 
