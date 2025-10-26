@@ -16,10 +16,6 @@
 
 package ai.dragonfly.uriel.experiments
 
-import ai.dragonfly.uriel.ColorContext
-
-import slash.vectorf.*
-
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
