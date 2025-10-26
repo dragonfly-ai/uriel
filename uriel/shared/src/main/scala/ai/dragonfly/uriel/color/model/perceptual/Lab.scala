@@ -159,7 +159,7 @@ trait Lab { self: WorkingSpace =>
       LabA(lab.L, lab.a, lab.b, r.nextFloat())
     }
 
-    override def maxDistanceSquared: Double = usableGamut.maxDistSquared
+    override def maxDistanceSquared: Double = usableGamut.maxDistSquared + 1.0
 
     def apply(values: NArray[Float]): LabA = dimensionCheck(values, 4).asInstanceOf[LabA]
 
@@ -170,7 +170,7 @@ trait Lab { self: WorkingSpace =>
      * @return an instance of the LAB case class.
      * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
      */
-    def apply(L: Float, a: Float, b: Float): LabA = apply(NArray[Float](a, b, L, 1f))
+    def apply(L: Float, a: Float, b: Float): LabA = apply(NArray[Float](L, a, b, 1f))
 
     /**
      * @param L the L* component of the CIE L*a*b* color.
