@@ -161,4 +161,165 @@ trait CMY { self: WorkingSpace =>
     }
   }
 
+  // CMYA
+
+  object CMYA extends VectorSpace[4, CMYA] {
+
+    opaque type CMYA = VecF[4]
+
+    override lazy val usableGamut: Gamut = new Gamut( Cube(1.0, 32).toMeshF )
+
+    override val maxDistanceSquared: Double = 4.0
+
+    def apply(values: NArray[Float]): CMYA = dimensionCheck(values, 4).asInstanceOf[CMYA]
+
+    def apply(cyan: Float, magenta: Float, yellow: Float): CMYA = apply(NArray[Float](cyan, magenta, yellow, 1f))
+
+    def apply(cyan: Float, magenta: Float, yellow: Float, alpha: Float): CMYA = apply(NArray[Float](cyan, magenta, yellow, alpha))
+
+    /**
+     * Factory method for creating instances of the CMY class.
+     * This method validates input parameters at the cost of some performance.
+     *
+     * @param cyan    a value between [0-1]
+     * @param magenta a value between [0-1]
+     * @param yellow  a value between [0-1]
+     * @return an instance of the CMY class.
+     */
+    def getIfValid(cyan: Float, magenta: Float, yellow: Float): Option[CMYA] = {
+      if (valid0to1(cyan, magenta, yellow)) Some(apply(cyan, magenta, yellow))
+      else None
+    }
+
+    /**
+     * Factory method for creating instances of the CMY class.
+     * This method validates input parameters at the cost of some performance.
+     *
+     * @param cyan    a value between [0-1]
+     * @param magenta a value between [0-1]
+     * @param yellow  a value between [0-1]
+     * @param alpha  a value between [0-1]
+     * @return an instance of the CMY class.
+     */
+    def getIfValid(cyan: Float, magenta: Float, yellow: Float, alpha: Float): Option[CMYA] = {
+      if (valid0to1(cyan, magenta, yellow, alpha)) Some(apply(cyan, magenta, yellow, alpha))
+      else None
+    }
+
+    override def random(r: scala.util.Random = Random.defaultRandom): CMYA = apply(
+      NArray[Float](
+        r.nextFloat(),
+        r.nextFloat(),
+        r.nextFloat(),
+        r.nextFloat()
+      )
+    )
+
+    def cyan(cmy: CMYA): Float = cmy(0)
+
+    def magenta(cmy: CMYA): Float = cmy(1)
+
+    def yellow(cmy: CMYA): Float = cmy(2)
+
+    def alpha(cmy: CMYA): Float = cmy(3)
+
+    override def euclideanDistanceSquaredTo(cmy1: CMYA, cmy2: CMYA): Double = cmy1.euclideanDistanceSquaredTo(cmy2)
+
+    override def fromVec(v: VecF[4]): CMYA = v.copy
+
+    def fromRGB(rgb: RGB): CMYA = apply(
+      clamp0to1(
+        1f - rgb.red,
+        1f - rgb.green,
+        1f - rgb.blue,
+        1f
+      )
+    )
+
+    override def fromRGBA(rgba: RGBA): CMYA = apply(
+      clamp0to1(
+        1f - rgba.red,
+        1f - rgba.green,
+        1f - rgba.blue,
+        rgba.alpha
+      )
+    )
+
+    override def fromXYZ(xyz: XYZ): CMYA = fromRGB(xyz.toRGB)
+
+    override def fromXYZA(xyza: XYZA): CMYA = fromRGBA(xyza.toRGBA)
+
+    override def toString:String = "CMYA"
+  }
+
+  type CMYA = CMYA.CMYA
+
+  /**
+   * CMY is the primary type for representing colors in CMY space.
+   *
+   * @constructor Create a new CMY object from three Float values.  This constructor does not validate input parameters.
+   *              For values taken from user input, sensors, or otherwise uncertain sources, consider using the factory method in the Color companion object.
+   * @see [[ai.dragonfly.color.CMY.getIfValid]] for a method of constructing CMY objects that validates inputs.
+   * @see [[https://en.wikipedia.org/wiki/CMY_color_model]] for more information about the CMY color space.
+   * @param cyan    a value ranging from [0-1].  Values outside of this range may cause errors.
+   * @param magenta a value ranging from [0-1].  Values outside of this range may cause errors.
+   * @param yellow  a value ranging from [0-1].  Values outside of this range may cause errors.
+   * @return an instance of the CMY type.
+   * @example {{{
+   * val c = CMY(1f, 0.25f, 0.5f, 0f)
+   * c.toString()  // returns "CMY(1.000,0.250,0.500,0.000)"
+   * }}}
+   */
+
+  given VectorColorModel[4, CMYA] with {
+    extension (cmya: CMYA) {
+
+      def cyan: Float = CMYA.cyan(cmya)
+
+      def magenta: Float = CMYA.magenta(cmya)
+
+      def yellow: Float = CMYA.yellow(cmya)
+
+      def alpha: Float = CMYA.alpha(cmya)
+
+      override def similarity(that: CMYA): Double = CMYA.similarity(cmya, that)
+
+      override def vec: VecF[4] = cmya.asInstanceOf[VecF[4]].copy
+
+      override def copy: CMYA = cmya.asInstanceOf[VecF[4]].copy.asInstanceOf[CMYA]
+
+      override def toRGB: RGB = RGB.apply(
+        clamp0to1(
+          1f - cmya.cyan,
+          1f - cmya.magenta,
+          1f - cmya.yellow
+        )
+      )
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toXYZ: XYZ = toRGB.toXYZ
+
+      override def toXYZA: XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def toXYZA(alpha:Float): XYZA = {
+        val xyz: XYZ = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def render: String = s"CMYA($cyan,$magenta,$yellow,$alpha)"
+
+    }
+  }
 }
