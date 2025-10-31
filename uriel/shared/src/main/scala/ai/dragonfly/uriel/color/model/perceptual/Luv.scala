@@ -76,11 +76,11 @@ trait Luv { self: WorkingSpace =>
      * @example {{{ val c = SlowSlimLuv(14.756, -3.756, -58.528) }}}
      */
 
-    def apply(L: Float, u: Float, v: Float): Luv = apply(NArray[Float](L, u, v))
+    def apply(L: Float, u: Float, v: Float): Luv = VecF[3](L, u, v)
 
     // XYZ to LUV and helpers:
 
-    val UV(uN: Double, vN: Double) = UV.fromXYZ(XYZ(illuminant.whitePointValues))
+    val UV(uN: Double, vN: Double) = UV.fromXYZ(XYZ.fromVec(illuminant.whitePointXYZ))
 
     def fL(t: Double): Double = if (t > ϵ) 116.0 * Math.cbrt(t) - 16.0 else k * t
 
@@ -214,7 +214,7 @@ trait Luv { self: WorkingSpace =>
      * @example {{{ val c = SlowSlimLuv(14.756, -3.756, -58.528) }}}
      */
 
-    def apply(L: Float, u: Float, v: Float): LuvA = apply(NArray[Float](L, u, v, 1f))
+    def apply(L: Float, u: Float, v: Float): LuvA = VecF[4](L, u, v, 1f)
 
     /**
      * @constructor Create a new SlowSlimLuv object from three float values.  This constructor does not validate input parameters.
@@ -226,11 +226,11 @@ trait Luv { self: WorkingSpace =>
      * @example {{{ val c = SlowSlimLuv(14.756, -3.756, -58.528) }}}
      */
 
-    def apply(L: Float, u: Float, v: Float, alpha: Float): LuvA = apply(NArray[Float](L, u, v, alpha))
+    def apply(L: Float, u: Float, v: Float, alpha: Float): LuvA = VecF[4](L, u, v, alpha)
 
     // XYZ to LUV and helpers:
 
-    val UV(uN: Double, vN: Double) = UV.fromXYZ(XYZ(illuminant.whitePointValues))
+    val UV(uN: Double, vN: Double) = UV.fromXYZ(XYZ.fromVec(illuminant.whitePointXYZ))
 
     def fL(t: Double): Double = if (t > ϵ) 116.0 * Math.cbrt(t) - 16.0 else k * t
 

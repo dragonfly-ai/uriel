@@ -22,7 +22,7 @@ import ai.dragonfly.uriel.cie.*
 import narr.*
 import slash.*
 import slash.vectorf.*
-import slash.matrixf.*
+import slash.matrix.*
 
 import scala.language.implicitConversions
 
@@ -103,7 +103,8 @@ trait LRGB { self: WorkingSpace =>
       transferFunction.decode(rgba.blue)
     )
 
-    override def fromXYZ(xyz:XYZ):LRGB = LRGB((M_inverse * xyz.vec.asColumnMatrix).values)
+    override def fromXYZ(xyz:XYZ):LRGB = LRGB.fromVec(M_inverse * xyz.vec)
+
 
     override def fromXYZA(xyza: XYZA): LRGB = fromXYZ(xyza.toXYZ)
     
@@ -147,7 +148,7 @@ trait LRGB { self: WorkingSpace =>
         alpha
       )
 
-      override def toXYZ: XYZ = (M * MatF[3, 1]( lrgb.red, lrgb.green, lrgb.blue )).values.asInstanceOf[XYZ]
+      override def toXYZ: XYZ = (M * lrgb.vec).asInstanceOf[XYZ]
 
       override def toXYZA: XYZA = {
         val xyz: XYZ = toXYZ
@@ -276,7 +277,11 @@ trait LRGB { self: WorkingSpace =>
       rgba.alpha
     )
 
-    override def fromXYZ(xyz:XYZ):LRGBA = LRGBA((M_inverse * xyz.vec.asColumnMatrix).values)
+    override def fromXYZ(xyz:XYZ):LRGBA = {
+      //val v = slash.vector.Vec[3]((M_inverse * xyz.vec.toVec.asColumnMatrix).values)
+      val lrgb: LRGB = LRGB.fromVec(M_inverse * xyz.vec)
+      LRGBA(lrgb.red, lrgb.green, lrgb.blue, 1f)
+    }
 
     override def fromXYZA(xyza: XYZA): LRGBA = fromXYZ(xyza.toXYZ)
 
@@ -319,7 +324,7 @@ trait LRGB { self: WorkingSpace =>
         alpha
       )
 
-      override def toXYZ: XYZ = (M * MatF[3, 1]( lrgba.red, lrgba.green, lrgba.blue )).values.asInstanceOf[XYZ]
+      override def toXYZ: XYZ = (M * VecF[3]( lrgba.red, lrgba.green, lrgba.blue )).asInstanceOf[XYZ]
 
       override def toXYZA: XYZA = {
         val xyz: XYZ = toXYZ

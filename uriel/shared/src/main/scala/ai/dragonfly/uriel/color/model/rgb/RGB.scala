@@ -21,7 +21,7 @@ import ai.dragonfly.uriel.*
 import ai.dragonfly.uriel.cie.*
 import ai.dragonfly.mesh.shape.*
 import slash.*
-import slash.matrixf.*
+import slash.matrix.*
 import slash.vectorf.*
 
 import scala.language.implicitConversions
@@ -144,11 +144,11 @@ trait RGB { self: WorkingSpace =>
       override def toRGBA(alpha: Float): RGBA = RGBA(red, green, blue, alpha)
 
       override def toXYZ: XYZ = {
-        (M * MatF[3, 1](
+        (M * VecF[3](
           transferFunction.decode(rgb.red),
           transferFunction.decode(rgb.green),
           transferFunction.decode(rgb.blue)
-        )).values.asInstanceOf[XYZ]
+        )).asInstanceOf[XYZ]
       }
 
       override def toXYZA: XYZA = toXYZ.toXYZA

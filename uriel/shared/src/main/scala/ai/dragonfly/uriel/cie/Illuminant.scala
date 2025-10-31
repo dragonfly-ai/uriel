@@ -17,8 +17,8 @@
 package ai.dragonfly.uriel.cie
 
 import narr.*
-
-import slash.matrixf.*
+import slash.matrix.*
+import slash.vectorf.VecF
 
 /**
  * From: https://en.wikipedia.org/wiki/Standard_illuminant
@@ -43,10 +43,11 @@ object Illuminant {
 
 // https://en.wikipedia.org/wiki/Standard_illuminant
 case class Illuminant(xₙ: Float, yₙ: Float /* Always 1f? */, zₙ: Float) {
-  lazy val `1/xₙ`: Float = 1f / xₙ
-  lazy val `1/zₙ`: Float = 1f / zₙ
-  lazy val `1/yₙ`: Float = 1f / yₙ
-  lazy val whitePointValues: NArray[Float] = NArray[Float](xₙ, yₙ, zₙ)
-  lazy val asColumnMatrix:MatF[3, 1] = MatF[3,1](whitePointValues)
-  lazy val asColumnMatrixAlpha:MatF[4, 1] = MatF[4,1](NArray[Float](xₙ, yₙ, zₙ, 1f))
+  lazy val `1/xₙ`: Double = 1.0 / xₙ
+  lazy val `1/zₙ`: Double = 1.0 / zₙ
+  lazy val `1/yₙ`: Double = 1.0 / yₙ
+  lazy val whitePointValues: NArray[Double] = NArray[Double](xₙ, yₙ, zₙ)
+  lazy val whitePointXYZ:VecF[3] = VecF(xₙ, yₙ, zₙ)
+  lazy val asColumnMatrix:Mat[3, 1] = Mat[3,1](whitePointValues)
+  lazy val asColumnMatrixAlpha:Mat[4, 1] = Mat[4,1](NArray[Double](xₙ, yₙ, zₙ, 1.0))
 }

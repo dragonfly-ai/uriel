@@ -19,7 +19,7 @@ package ai.dragonfly.uriel.cie
 import narr.*
 import slash.*
 import slash.vectorf.*
-import matrixf.*
+import matrix.*
 
 import ai.dragonfly.uriel.color.model.perceptual.XYZ
 import ai.dragonfly.uriel.color.model.rgb.RGB
@@ -36,11 +36,11 @@ trait WorkingSpace extends RGB with XYZ with Gamut {
 
   val cmf: SampleSet = DEFAULT
 
-  lazy val whitePoint:XYZ = XYZ(illuminant.whitePointValues)
+  lazy val whitePoint:XYZ = XYZ.fromVec(illuminant.whitePointXYZ)
 
-  lazy val M: MatF[3,3] = primaries.getM(illuminant)
+  lazy val M: Mat[3,3] = primaries.getM(illuminant)
 
-  lazy val M_inverse: MatF[3,3] = M.inv
+  lazy val M_inverse: Mat[3,3] = M.inverse
 
   given ctx:WorkingSpace = this
 

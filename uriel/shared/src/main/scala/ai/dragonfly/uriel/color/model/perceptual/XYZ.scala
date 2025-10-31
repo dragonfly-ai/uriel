@@ -20,7 +20,7 @@ import narr.*
 import ai.dragonfly.uriel.cie.WorkingSpace
 import slash.*
 import slash.vectorf.*
-import slash.matrixf.*
+import slash.matrix.*
 
 import scala.language.implicitConversions
 import scala.util.Random
@@ -94,7 +94,7 @@ trait XYZ { self:WorkingSpace =>
       override def vec:VecF[3] = xyz.asInstanceOf[VecF[3]].copy
 
       override def toRGB: RGB = {
-        val temp: NArray[Float] = (M_inverse * vec.asColumnMatrix).values
+        val temp: NArray[Float] = (M_inverse * vec).asInstanceOf[NArray[Float]]
         var i: Int = 0
         while (i < temp.length) {
           temp(i) = transferFunction.encode(temp(i))
@@ -198,7 +198,7 @@ trait XYZ { self:WorkingSpace =>
 
       override def similarity(that: XYZA): Double = XYZA.similarity(xyza, that)
 
-      override def vec:VecF[4] = XYZA.asInstanceOf[VecF[4]].copy
+      override def vec:VecF[4] = xyza.asInstanceOf[VecF[4]].copy
 
       override def toRGB: RGB = XYZ(x, y, z).toRGB
 

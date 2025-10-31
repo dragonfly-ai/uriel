@@ -54,6 +54,9 @@ object ColorSpaceGamutMeshGenerator extends App {
     writeMesh(XYZ.fullGamut, "XYZ_Full", (cv:VecF[3]) => Gamut.XYZtoARGB32(cv).asInstanceOf[sRGB.ARGB32])
     writeMesh(XYZ.usableGamut, "XYZ_Usable", (cv:VecF[3]) => Gamut.XYZtoARGB32(cv).asInstanceOf[sRGB.ARGB32])
 
+    writeMesh(Oklab.fullGamut,   "Oklab_Full",   (cv: VecF[3]) => Gamut.XYZtoARGB32(Oklab.fromVec(cv).toXYZ.asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
+    writeMesh(Oklab.usableGamut, "Oklab_Usable", (cv: VecF[3]) => Gamut.XYZtoARGB32(Oklab.fromVec(cv).toXYZ.asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
+
     writeMesh(Lab.fullGamut, "Lab_Full", (cv:VecF[3]) => Gamut.XYZtoARGB32(Lab.fromVec(cv).toXYZ.asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
     writeMesh(Lab.usableGamut, "Lab_Usable", (cv:VecF[3]) => Gamut.XYZtoARGB32(Lab.fromVec(cv).toXYZ.asInstanceOf[VecF[3]]).asInstanceOf[sRGB.ARGB32])
 

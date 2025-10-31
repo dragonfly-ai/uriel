@@ -73,6 +73,8 @@ object ColorSpaceNoise extends App {
     noisyImage(Lab)
     noisyImage(LabA)
 
+    noisyImage(Oklab)
+
     noisyImage(Luv)
     noisyImage(LuvA)
   }

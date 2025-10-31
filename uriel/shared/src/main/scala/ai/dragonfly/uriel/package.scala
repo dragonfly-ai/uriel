@@ -20,11 +20,11 @@ import narr.*
 import ai.dragonfly.uriel.cie.WorkingSpace
 import ai.dragonfly.uriel.color.model.*
 import ai.dragonfly.uriel.color.model.huesat.{HSL, HSV}
-import ai.dragonfly.uriel.color.model.perceptual.{Lab, Luv}
+import ai.dragonfly.uriel.color.model.perceptual.{Lab, Luv, Oklab}
 import ai.dragonfly.uriel.color.model.subtractive.{CMY, CMYK}
 import ai.dragonfly.uriel.color.spectral.*
 
-import slash.matrixf.*
+import slash.matrix.*
 
 package object uriel {
 
@@ -58,6 +58,7 @@ package object uriel {
     with HSV
     with Lab
     with Luv
+    with Oklab
 
   object ColorContext {
 
@@ -65,19 +66,19 @@ package object uriel {
     import Illuminant.*
 
     val knownContexts:Array[ProvidedColorContexts] = Array[ProvidedColorContexts](
-      Adobe_RGB_1998,
-      Apple_RGB,
-      Best_RGB,
-      Beta_RGB,
-      Bruce_RGB,  // included as a gesture of gratitude to Bruce Lindenbloom who's work inspired this library and made it possible.
-      CIE_RGB,
-      ColorMatch_RGB,
-      Don_RGB_4,
-      ECI_RGB_v2,
-      Ekta_Space_PS5,
-      NTSC_RGB,
-      PAL_RGB,
-      ProPhoto_RGB,
+//      Adobe_RGB_1998,
+//      Apple_RGB,
+//      Best_RGB,
+//      Beta_RGB,
+//      Bruce_RGB,  // included as a gesture of gratitude to Bruce Lindenbloom who's work inspired this library and made it possible.
+//      CIE_RGB,
+//      ColorMatch_RGB,
+//      Don_RGB_4,
+//      ECI_RGB_v2,
+//      Ekta_Space_PS5,
+//      NTSC_RGB,
+//      PAL_RGB,
+//      ProPhoto_RGB,
       SMPTE_C_RGB,
       sRGB,
       Wide_Gamut_RGB,
@@ -97,7 +98,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D65
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         1.93939393939394f, 1f, 0.090909090909091f,
         0.295774647887324f, 1f, 0.112676056338028f,
         2.5f, 1f, 13.1666666666667f
@@ -115,7 +116,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D65
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         1.83823529411765f, 1f, 0.102941176470588f,
         0.470588235294118f, 1f, 0.210084033613445f,
         2.21428571428571f, 1f, 11.0714285714286f
@@ -133,7 +134,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D50
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.76931775348662f, 1f, 0f,
         0.27741935483871f, 1f, 0.012903225806452f,
         3.71428571428571f, 1f, 23.8571428571429f
@@ -151,7 +152,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D50
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.2133676092545f, 1f, 0f,
         0.263011521652761f, 1f, 0.061316381936167f,
         3.59375f, 1f, 23.8153409090909f
@@ -173,7 +174,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D65
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         1.93939393939394f, 1f, 0.090909090909091f,
         0.430769230769231f, 1f, 0.107692307692308f,
         2.5f, 1.0f, 13.1666666666667f
@@ -191,7 +192,7 @@ package object uriel {
 
       override val illuminant: Illuminant = E
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.77358490566038f, 1f, 0f,
         0.382147838214784f, 1f, 0.01255230125523f,
         18.5555555555556f, 1f, 91.5555555555556f
@@ -209,7 +210,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D50
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         1.85294117647059f, 1f, 0.088235294117647f,
         0.487603305785124f, 1f, 0.165289256198347f,
         2f, 1f, 10.3333333333333f
@@ -227,7 +228,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D50
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.32f, 1f, 0.013333333333333f,
         0.281045751633987f, 1f, 0.026143790849673f,
         3.71428571428571f, 1f, 23.8571428571429f
@@ -245,7 +246,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D50
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.03030303030303f, 1f, 0f,
         0.295774647887324f, 1f, 0.112676056338028f,
         1.75f, 1f, 9.75f
@@ -263,7 +264,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D50
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.27868852459016f, 1f, 0f,
         0.371428571428571f, 1f, 0.057142857142857f,
         22f, 1f, 177f
@@ -281,7 +282,7 @@ package object uriel {
 
       override val illuminant: Illuminant = C
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.03030303030303f, 1f, 0f,
         0.295774647887324f, 1f, 0.112676056338028f,
         1.75f, 1f, 9.75f
@@ -302,7 +303,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D65
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         1.93939393939394f, 1f, 0.090909090909091f,
         0.483333333333333f, 1f, 0.183333333333333f,
         2.5f, 1f, 13.1666666666667f
@@ -322,7 +323,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D50
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.76931775348662f, 1f, 0f,
         0.189909566872918f, 1f, 0f,
         366f, 1f, 9633f
@@ -341,7 +342,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D65
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         1.85294117647059f, 1f, 0.088235294117647f,
         0.521008403361345f, 1f, 0.159663865546218f,
         2.21428571428571f, 1f, 11.0714285714286f
@@ -361,7 +362,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D65
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         1.93939393939394f, 1f, 0.090909090909091f,
         0.5f, 1f, 0.166666666666667f,
         2.5f, 1f, 13.1666666666667f
@@ -380,7 +381,7 @@ package object uriel {
 
       override val illuminant: Illuminant = D50
 
-      val verificationMatrix: MatF[3, 3] = MatF[3, 3](
+      val verificationMatrix: Mat[3, 3] = Mat[3, 3](
         2.77358490566038f, 1f, 0f,
         0.139225181598063f, 1f, 0.071428571428571f,
         8.72222222222222f, 1f, 45.8333333333333f

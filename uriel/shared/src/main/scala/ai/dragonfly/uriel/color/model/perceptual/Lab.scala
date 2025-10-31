@@ -50,7 +50,7 @@ trait Lab { self: WorkingSpace =>
      * @return an instance of the LAB case class.
      * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
      */
-    def apply(L: Float, a: Float, b: Float): Lab = apply(NArray[Float](L, a, b))
+    def apply(L: Float, a: Float, b: Float): Lab = VecF[3](L, a, b)
 
     inline def f(t: Double): Double = if (t > ϵ) Math.cbrt(t) else (t * `k/116`) + `16/116`
 
@@ -170,7 +170,7 @@ trait Lab { self: WorkingSpace =>
      * @return an instance of the LAB case class.
      * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
      */
-    def apply(L: Float, a: Float, b: Float): LabA = apply(NArray[Float](L, a, b, 1f))
+    def apply(L: Float, a: Float, b: Float): LabA = VecF[4](L, a, b, 1f)
 
     /**
      * @param L the L* component of the CIE L*a*b* color.
@@ -180,7 +180,7 @@ trait Lab { self: WorkingSpace =>
      * @return an instance of the LAB case class.
      * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
      */
-    def apply(L: Float, a: Float, b: Float, alpha: Float): LabA = apply(NArray[Float](L, a, b, alpha))
+    def apply(L: Float, a: Float, b: Float, alpha: Float): LabA = VecF[4](L, a, b, alpha)
 
     inline def f(t: Double): Double = if (t > ϵ) Math.cbrt(t) else (t * `k/116`) + `16/116`
 

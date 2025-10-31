@@ -218,5 +218,7 @@ trait Gamut { self: WorkingSpace =>
       VecF.fromVec[3](tetrahedra(i).random(r))
     }
 
+    override def toString: String = "Gamut"
+
   }
 }
