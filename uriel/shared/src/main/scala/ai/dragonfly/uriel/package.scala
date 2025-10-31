@@ -66,19 +66,19 @@ package object uriel {
     import Illuminant.*
 
     val knownContexts:Array[ProvidedColorContexts] = Array[ProvidedColorContexts](
-//      Adobe_RGB_1998,
-//      Apple_RGB,
-//      Best_RGB,
-//      Beta_RGB,
-//      Bruce_RGB,  // included as a gesture of gratitude to Bruce Lindenbloom who's work inspired this library and made it possible.
-//      CIE_RGB,
-//      ColorMatch_RGB,
-//      Don_RGB_4,
-//      ECI_RGB_v2,
-//      Ekta_Space_PS5,
-//      NTSC_RGB,
-//      PAL_RGB,
-//      ProPhoto_RGB,
+      Adobe_RGB_1998,
+      Apple_RGB,
+      Best_RGB,
+      Beta_RGB,
+      Bruce_RGB,  // included as a gesture of gratitude to Bruce Lindenbloom who's work inspired this library and made it possible.
+      CIE_RGB,
+      ColorMatch_RGB,
+      Don_RGB_4,
+      ECI_RGB_v2,
+      Ekta_Space_PS5,
+      NTSC_RGB,
+      PAL_RGB,
+      ProPhoto_RGB,
       SMPTE_C_RGB,
       sRGB,
       Wide_Gamut_RGB,

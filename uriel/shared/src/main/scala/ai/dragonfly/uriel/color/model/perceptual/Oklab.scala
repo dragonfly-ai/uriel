@@ -152,4 +152,142 @@ trait Oklab { self: WorkingSpace =>
 
     }
   }
+
+  // OklabA
+
+  object OklabA extends PerceptualSpace[4, OklabA] {
+
+    opaque type OklabA = VecF[4]
+
+    val m1: Mat[4, 4] = Mat[4,4](
+      0.8189330101, 0.3618667424,-0.1288597137, 0,
+      0.0329845436, 0.9293118715, 0.0361456387, 0,
+      0.0482003018, 0.2643662691, 0.6338517070, 0,
+      0, 0, 0, 1.0
+    )
+
+    val m2: Mat[4, 4] = Mat[4, 4](
+      0.2104542553, 0.7936177850,-0.0040720468, 0,
+      1.9779984951,-2.4285922050, 0.4505937099, 0,
+      0.0259040371, 0.7827717662,-0.8086757660, 0,
+      0, 0, 0, 1.0
+    )
+
+    val m1Inv: Mat[4, 4] = m1.inverse
+
+    val m2Inv: Mat[4, 4] = m2.inverse
+
+    override lazy val fullGamut: Gamut = Oklab.fullGamut
+
+    override lazy val usableGamut: Gamut = Oklab.usableGamut
+
+    override def random(r: Random): OklabA = {
+      val oklab:Oklab = Oklab.random(r)
+      OklabA(oklab.L, oklab.a, oklab.b, r.nextFloat())
+    }
+
+    override def maxDistanceSquared: Double = 1.0 + Oklab.maxDistanceSquared
+
+    override def apply(values: NArray[Float]): OklabA = dimensionCheck(values, 4).asInstanceOf[VecF[4]]
+
+    /**
+     * @param L the L* component of the CIE L*a*b* color.
+     * @param a the a* component of the CIE L*a*b* color.
+     * @param b the b* component of the CIE L*a*b* color.
+     * @return an instance of the LAB case class.
+     * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
+     */
+    def apply(L: Float, a: Float, b: Float): OklabA = VecF[4](L, a, b, 1f)
+
+    /**
+     * @param L the L* component of the CIE L*a*b* color.
+     * @param a the a* component of the CIE L*a*b* color.
+     * @param b the b* component of the CIE L*a*b* color.
+     * @param alpha the alpha channel
+     * @return an instance of the LAB case class.
+     * @example {{{ val c = LAB(72.872, -0.531, 71.770) }}}
+     */
+    def apply(L: Float, a: Float, b: Float, alpha:Float): OklabA = VecF[4](L, a, b, alpha)
+
+    def L(lab: OklabA): Float = lab(0)
+
+    def a(lab: OklabA): Float = lab(1)
+
+    def b(lab: OklabA): Float = lab(2)
+
+    def alpha(lab: OklabA): Float = lab(3)
+
+    override def fromVec(v: VecF[4]): OklabA = v
+
+    override def fromRGBA(rgba: RGBA): OklabA = fromXYZ(rgba.toXYZ)
+
+    /**
+     * Requires a reference 'white' because although black provides a lower bound for XYZ values, they have no upper bound.
+     *
+     * @param xyz an xyz color
+     * @return a Laab color
+     */
+    def fromXYZ(xyz: XYZ): OklabA = {
+      val oklab:Oklab = Oklab.fromXYZ(xyz)
+      OklabA(oklab.L, oklab.a, oklab.b, 1f)
+    }
+
+    override def fromXYZA(xyza: XYZA): OklabA = {
+      val lms: slash.vector.Vec[4] = m1 * xyza.vec.toVec
+      val temp: VecF[4] = (m2 * slash.vector.Vec[4](`∛`(lms(0)), `∛`(lms(1)), `∛`(lms(2)))).toVecF
+      OklabA( temp(0), temp(1), temp(2), temp(3) )
+    }
+
+    override def toString:String = "OklabA"
+
+  }
+
+  type OklabA = OklabA.OklabA
+
+  given PerceptualColorModel[4, OklabA] with {
+    extension (oklaba: OklabA) {
+
+      override inline def copy: OklabA = OklabA(L, a, b)
+
+      inline def L: Float = OklabA.L(oklaba)
+
+      inline def a: Float = OklabA.a(oklaba)
+
+      inline def b: Float = OklabA.b(oklaba)
+
+      inline def alpha: Float = OklabA.alpha(oklaba)
+
+      override def similarity(that: OklabA): Double = OklabA.similarity(oklaba, that)
+
+      override def vec: VecF[4] = oklaba.asInstanceOf[VecF[4]].copy
+
+      override def toRGB: RGB = toXYZ.toRGB
+
+      override def toRGBA: RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      override def toRGBA(alpha: Float): RGBA = {
+        val rgb: RGB = toRGB
+        RGBA(rgb.red, rgb.green, rgb.blue, alpha)
+      }
+
+      def toXYZ: XYZ = Oklab(L, a, b).toXYZ
+
+      override def toXYZA: XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def toXYZA(alpha: Float): XYZA = {
+        val xyz = toXYZ
+        XYZA(xyz.x, xyz.y, xyz.z, alpha)
+      }
+
+      override def render: String = s"OklabA($L,$a,$b,$alpha)"
+
+    }
+  }
+
 }
