@@ -17,17 +17,16 @@
 package ai.dragonfly.uriel.color.model.perceptual
 
 import ai.dragonfly.uriel.cie.*
-import ai.dragonfly.uriel.cie.Constant.*
 import narr.*
 import slash.*
 import slash.vectorf.*
 import slash.matrix.*
-import slash.matrix.decomposition.SV
 
 import scala.util.Random
 
 trait Oklab { self: WorkingSpace =>
 
+  // https://bottosson.github.io/posts/oklab/
   object Oklab extends PerceptualSpace[3, Oklab] {
 
     opaque type Oklab = VecF[3]
